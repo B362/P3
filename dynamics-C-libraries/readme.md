@@ -2,7 +2,7 @@
 
 com = center of mass
 
-brot = base rotation (theta 1)
+brot (german bread) = base rotation (theta 1)
 
 btheta = base pitch (theta 2)
 
