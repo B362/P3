@@ -1,9 +1,9 @@
 function y = Compensator(u)
 
 %% joint velocity and displacement
-ddtheta1 = u(1); theta1 = u(4); 
-ddtheta2 = u(2); theta2 = u(5); 
-ddtheta3 = u(3); theta3 = u(6);
+dtheta1 = u(1); theta1 = u(4); 
+dtheta2 = u(2); theta2 = u(5); 
+dtheta3 = u(3); theta3 = u(6);
 
 g = 9.801; % gravity constant
 
@@ -13,17 +13,17 @@ l1 = 0.235; % length [m]
 d1 = 0.065; % mass center
 m1 = 0.228; % mass [kg]
 % moment of inertia
-I1xx = 0; I1xy = 0; I1xz = 0;
-I1yx = 0; I1yy = 0; I1yz = 0;
-I1zx = 0; I1zy = 0; I1zz = 0;
+I1xx = 0.00006750; I1xy = 0.00001499; I1xz = 0;
+I1yx = 0.00001499; I1yy = 0.00090310; I1yz = 0;
+I1zx = 0; I1zy = 0; I1zz = 0.00088824;
 %======================================  link 2
 l2 = 0.305; % length [m]
 d2 = 0.135; % mass center
 m2 = 0.275; % mass [kg]
 % moment of inertia
-I2xx = 0; I2xy = 0; I2xz = 0;
-I2yx = 0; I2yy = 0; I2yz = 0;
-I2zx = 0; I2zy = 0; I2zz = 0;
+I2xx = 0.00012618; I2xy = 0.00001090; I2xz = 0;
+I2yx = 0.00001090; I2yy = 0.00062333; I2yz = 0;
+I2zx = 0; I2zy = 0; I2zz = 0.00055076;
 
     %% %%%%%%%%%%%%%%%%%%%%%%%%%  coefficients of dynamic equation
 
