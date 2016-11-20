@@ -13,9 +13,9 @@ l1 = 0.235; % length [m]
 d1 = 0.065; % mass center
 m1 = 0.228; % mass [kg]
 % moment of inertia
-I1xx = 0.00006750; I1xy = 0.00001499; I1xz = 0;
-I1yx = 0.00001499; I1yy = 0.00090310; I1yz = 0;
-I1zx = 0; I1zy = 0; I1zz = 0.00088824;
+I1xx = 0.00006781; I1xy = 0.00002608; I1xz = 0;
+I1yx = 0.00002608; I1yy = 0.00631914; I1yz = 0;
+I1zx = 0; I1zy = 0; I1zz = 0.00630459;
 %======================================  link 2
 l2 = 0.305; % length [m]
 d2 = 0.135; % mass center
@@ -49,10 +49,10 @@ I2zx = 0; I2zy = 0; I2zz = 0.00055076;
      H33 = (1/2)*(I2xx+I2yy+2*d2.^2*m2+((-1)*I2xx+I2yy)*cos(2* ...
       theta1)+(-1)*(I2xy+I2yx)*sin(2*theta1));
 
-  %% Tau line calcularion
+  %% Tau line calculation
   
     taul1 = H11*ddtheta1 + H12*ddtheta2 + H13*ddtheta3;
     taul2 = H21*ddtheta1 + H22*ddtheta2 + H23*ddtheta3;
     taul3 = H31*ddtheta1 + H32*ddtheta2 + H33*ddtheta3;
     
-    y = [taul1; taul2; taul3];
+y = [taul1; taul2; taul3];

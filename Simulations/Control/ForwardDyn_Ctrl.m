@@ -1,9 +1,12 @@
-function y = InverseDynamicsFunction(u)
+function y = ForwardDyn(u)
+
+%%   motor torques
+tau1 = u(1); tau2 = u(2); tau3 = u(3);
 
 %% joint velocity and displacement
-ddtheta1 = u(1); dtheta1 = u(4); theta1 = u(7); 
-ddtheta2 = u(2); dtheta2 = u(5); theta2 = u(8); 
-ddtheta3 = u(3); dtheta3 = u(6); theta3 = u(9); 
+dtheta1 = u(4); theta1 = u(7); 
+dtheta2 = u(5); theta2 = u(8); 
+dtheta3 = u(6); theta3 = u(9); 
 
 g = 9.801; % gravity constant
 
@@ -24,8 +27,10 @@ m2 = 0.275; % mass [kg]
 I2xx = 0.00012618; I2xy = 0.00001090; I2xz = 0;
 I2yx = 0.00001090; I2yy = 0.00062333; I2yz = 0;
 I2zx = 0; I2zy = 0; I2zz = 0.00055076;
-  
-    %% %%%%%%%%%%%%%%%%%%%%%%%%%  coefficients of dynamic equation
+
+%% %%%%%%%%%%%%%%%%%% dynamic simulation
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%  coefficients of dynamic equation
      H11 = (1/2)*(2*I1zz+2*I2zz+d2.^2*m2+l1.^2*m2+l1.^2*m2*cos(2*theta2 ...
       )+2*d2*l1*m2*cos(theta3)+d2.^2*m2*cos(2*(theta2+theta3))+2* ...
       d2*l1*m2*cos(2*theta2+theta3));
@@ -76,14 +81,19 @@ I2zx = 0; I2zy = 0; I2zz = 0.00055076;
 
      G1 = 0;
      G2 = g*((d1*m1+l1*m2)*cos(theta2)+d2*m2*cos(theta2+theta3));
-     G3 = d2*g*m2*cos(theta2+theta3);
+     G3 = d2*g*m2*cos(theta2+theta3);    
     
-    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  actuator torques
-    tau_1 = H11*ddtheta1 + H12*ddtheta2 + H13*ddtheta3 + ...
-        C11*dtheta1 + C12*dtheta2 + C13*dtheta3 + G1;
-    tau_2 = H21*ddtheta1 + H22*ddtheta2 + H23*ddtheta3 + ...
-        C21*dtheta1 + C22*dtheta2 + C23*dtheta3 + G2;
-    tau_3 = H31*ddtheta1 + H32*ddtheta2 + H33*ddtheta3 + ...
-        C31*dtheta1 + C32*dtheta2 + C33*dtheta3 + G3;
+%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  actuator torques
+%     tau_1 = H11*ddtheta_1 + H12*ddtheta_2 - h*(dtheta_2)^2 ...
+%         -2*h*dtheta_1*dtheta_2 + G1;
+%     tau_2 = H22*ddtheta_2 + H12*ddtheta_1 - h*(dtheta_1)^2 + G2;
     
-    y = [tau_1; tau_2; tau_3];
+    M = [H11 H12 H13; H21 H22 H23; H31 H32 H33]; 
+    
+    torque1 = tau1 - (C11*dtheta1 + C12*dtheta2 + C13*dtheta3) - G1;
+    torque2 = tau2 - (C21*dtheta1 + C22*dtheta2 + C23*dtheta3) - G2;
+    torque3 = tau3 - (C31*dtheta1 + C32*dtheta2 + C33*dtheta3) - G3;
+    
+    tvector = [torque1; torque2; torque3];
+    
+    y = M\tvector; 

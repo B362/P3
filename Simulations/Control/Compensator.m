@@ -13,9 +13,9 @@ l1 = 0.235; % length [m]
 d1 = 0.065; % mass center
 m1 = 0.228; % mass [kg]
 % moment of inertia
-I1xx = 0.00006750; I1xy = 0.00001499; I1xz = 0;
-I1yx = 0.00001499; I1yy = 0.00090310; I1yz = 0;
-I1zx = 0; I1zy = 0; I1zz = 0.00088824;
+I1xx = 0.00006781; I1xy = 0.00002608; I1xz = 0;
+I1yx = 0.00002608; I1yy = 0.00631914; I1yz = 0;
+I1zx = 0; I1zy = 0; I1zz = 0.00630459;
 %======================================  link 2
 l2 = 0.305; % length [m]
 d2 = 0.135; % mass center
