@@ -82,6 +82,10 @@ I2zx = 0; I2zy = 0; I2zz = 0.00055076;
      G1 = 0;
      G2 = g*((d1*m1+l1*m2)*cos(theta2)+d2*m2*cos(theta2+theta3));
      G3 = d2*g*m2*cos(theta2+theta3);    
+     
+     F1 = 4.65357*dtheta1;
+     F2 = 2.09525*dtheta2;
+     F3 = 4.65357*dtheta3;
     
 %     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  actuator torques
 %     tau_1 = H11*ddtheta_1 + H12*ddtheta_2 - h*(dtheta_2)^2 ...
@@ -90,9 +94,9 @@ I2zx = 0; I2zy = 0; I2zz = 0.00055076;
     
     M = [H11 H12 H13; H21 H22 H23; H31 H32 H33]; 
     
-    torque1 = tau1 - (C11*dtheta1 + C12*dtheta2 + C13*dtheta3) - G1;
-    torque2 = tau2 - (C21*dtheta1 + C22*dtheta2 + C23*dtheta3) - G2;
-    torque3 = tau3 - (C31*dtheta1 + C32*dtheta2 + C33*dtheta3) - G3;
+    torque1 = tau1 - (C11*dtheta1 + C12*dtheta2 + C13*dtheta3) - G1 - F1;
+    torque2 = tau2 - (C21*dtheta1 + C22*dtheta2 + C23*dtheta3) - G2 - F2;
+    torque3 = tau3 - (C31*dtheta1 + C32*dtheta2 + C33*dtheta3) - G3 - F3;
     
     tvector = [torque1; torque2; torque3];
     
