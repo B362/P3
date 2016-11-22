@@ -1,3 +1,5 @@
+% write this on matlab editior
+
 %rad = (pi/180)*degree
 pi = sym('pi')
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
