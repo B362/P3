@@ -1,0 +1,62 @@
+%%Right this on Editor, should work on Matlab
+
+%% Preparation
+clc
+clear all
+close all
+
+%% Initialize Toolbox Robotics
+startup_rvc;
+
+%% Link creation
+% Theta = joint angle (rad)
+% D = link displacement (m)
+% A = length of the link (m)
+% Alpha = link torsion (rad)
+% Sigma = joint type (0: rotating or 1: prismatic)
+
+L(1) = Link([0 0 0 0 0], 'modified');
+L(2) = Link([0 0 0 pi/2 0], 'modified');
+L(3) = Link([0 0 0.22 0 0], 'modified');
+
+
+%% Creation of robot
+robo = SerialLink(L, 'name', 'CrustCrawler')
+robo.teach() %Teach Pendent
+
+%% Predifined movement
+qf0 = [0 0 0 0];
+qf1 = [0 0 0 0];
+qf2 = [0 0 0 0];
+qf3 = [0 0 0 0];
+%qf4 = [0 0 0 0];
+
+%% Forward Kinematics
+T0 = robo.fkine(qf0)
+%robo.plot(qf0)
+T1 = robo.fkine(qf1)
+%robo.plot(qf1)
+T2 = robo.fkine(qf2)
+%robo.plot(qf2)
+T3 = robo.fkine(qf3)
+%robo.plot(qf3)
+%T4 = robo.fkine(qf4)
+%robo.plot(qf4)
+
+%% Plotting
+tempo = 0:0.4:10;
+q = jtraj(qf0, qf1, tempo);
+robo.plot(q)
+pause(1)
+q = jtraj(qf1, qf2, tempo);
+robo.plot(q)
+pause(1)
+q = jtraj(qf2, qf3, tempo);
+robo.plot(q)
+pause(1)
+q = jtraj(qf3, qf1, tempo);
+robo.plot(q)
+pause(1)
+%q = jtraj(qf4, qf1, tempo);
+%robo.plot(q)
+
