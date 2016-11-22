@@ -1,0 +1,64 @@
+%rad = (pi/180)*degree
+pi = sym('pi')
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%If real values (numbers) use this:
+alpha1 = (pi/180)*0
+    a1 = 0
+    d1 = 0
+%theta1 = 0
+
+%If undefined values (no numbers) use this:
+%syms alpha1
+%syms a1
+%syms d1
+syms theta1
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+%If real values (numbers) use this:
+alpha2 = (pi/180)*90
+    a2 = 0
+    d2 = 0
+%theta2 = 
+
+%If undefined values (no numbers) use this:
+%syms alpha2
+%syms a2
+%syms d2
+syms theta2
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+%If real values (numbers) use this:
+alpha3 = (pi/180)*0
+    a3 = 0.22
+    d3 = 0
+%theta3 = 
+
+%If undefined values (no numbers) use this:
+%syms alpha3
+%syms a3
+%syms d3
+syms theta3
+
+%___________________________________________________________________________________________________________
+
+
+T1  =[             cos(theta1),                 -sin(theta1),                  0,                   a1;
+       sin(theta1)*cos(alpha1),      cos(theta1)*cos(alpha1),       -sin(alpha1),      -sin(alpha1)*d1;
+       sin(theta1)*sin(alpha1),      cos(theta1)*sin(alpha1),        cos(alpha1),       cos(alpha1)*d1;
+                             0,                            0,                  0,                    1;]
+                         
+T2  =[             cos(theta2),                 -sin(theta2),                  0,                   a2;
+       sin(theta2)*cos(alpha2),      cos(theta2)*cos(alpha2),       -sin(alpha2),      -sin(alpha2)*d2;
+       sin(theta2)*sin(alpha2),      cos(theta2)*sin(alpha2),        cos(alpha2),       cos(alpha2)*d2;
+                             0,                            0,                  0,                    1;]
+
+T3  =[             cos(theta3),                 -sin(theta3),                  0,                   a3;
+       sin(theta3)*cos(alpha3),      cos(theta3)*cos(alpha3),       -sin(alpha3),      -sin(alpha3)*d3;
+       sin(theta3)*sin(alpha3),      cos(theta3)*sin(alpha3),        cos(alpha3),       cos(alpha3)*d3;
+                            0,                            0,                  0,                    1;]
+
+
+
+T = T1*T2*T3
