@@ -13,7 +13,7 @@ g = 9.801; % gravity constant
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%  link properties
 %======================================  link 1
 l1 = 0.235; % length [m]
-d1 = 0.065; % mass center
+d1 = 0.16; % mass center
 m1 = 0.228; % mass [kg]
 % moment of inertia
 I1xx = 0.00006781; I1xy = 0.00002608; I1xz = 0;
