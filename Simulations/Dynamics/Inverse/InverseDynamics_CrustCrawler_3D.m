@@ -26,7 +26,7 @@ g = 9.801; % gravity constant
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%  link properties
 %======================================  link 1
 l1 = 0.235; % length [m]
-d1 = 0.160; % mass center
+d1 = 0.065; % mass center
 m1 = 0.228; % mass [kg]
 % moment of inertia
 I1xx = 0.00006781; I1xy = 0.00002608; I1xz = 0;
@@ -113,18 +113,14 @@ for t = linspace(0, T, N)
      G1 = 0;
      G2 = g*((d1*m1+l1*m2)*cos(theta2(i))+d2*m2*cos(theta2(i)+theta3(i)));
      G3 = d2*g*m2*cos(theta2(i)+theta3(i));
-         
-     F1 = 4.65357*dtheta1;
-     F2 = 2.09525*dtheta2;
-     F3 = 4.65357*dtheta3;
-     
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  actuator torques
     tau_1(i) = H11*ddtheta1(i) + H12*ddtheta2(i) + H13*ddtheta3(i) + ...
-        C11*dtheta1(i) + C12*dtheta2(i) + C13*dtheta3(i) + G1 + F1;
+        C11*dtheta1(i) + C12*dtheta2(i) + C13*dtheta3(i) + G1;
     tau_2(i) = H21*ddtheta1(i) + H22*ddtheta2(i) + H23*ddtheta3(i) + ...
-        C21*dtheta1(i) + C22*dtheta2(i) + C23*dtheta3(i) + G2 + F2;
+        C21*dtheta1(i) + C22*dtheta2(i) + C23*dtheta3(i) + G2;
     tau_3(i) = H31*ddtheta1(i) + H32*ddtheta2(i) + H33*ddtheta3(i) + ...
-        C31*dtheta1(i) + C32*dtheta2(i) + C33*dtheta3(i) + G3 + F3;
+        C31*dtheta1(i) + C32*dtheta2(i) + C33*dtheta3(i) + G3;
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  link positions
     %%%%%%%%%%%%%%%%%% link 1
@@ -204,4 +200,4 @@ for j = 1 : N
     F(j) = getframe; 
 end
 hold off
-movie(F); 
+movie(F);
