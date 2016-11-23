@@ -29,17 +29,17 @@ l1 = 0.235; % length [m]
 d1 = 0.160; % mass center
 m1 = 0.228; % mass [kg]
 % moment of inertia
-I1xx = 0; I1xy = 0; I1xz = 0;
-I1yx = 0; I1yy = 0; I1yz = 0;
-I1zx = 0; I1zy = 0; I1zz = 0;
+I1xx = 0.00006781; I1xy = 0.00002608; I1xz = 0;
+I1yx = 0.00002608; I1yy = 0.00631914; I1yz = 0;
+I1zx = 0; I1zy = 0; I1zz = 0.00630459;
 %======================================  link 2
 l2 = 0.305; % length [m]
 d2 = 0.135; % mass center
 m2 = 0.275; % mass [kg]
 % moment of inertia
-I2xx = 0; I2xy = 0; I2xz = 0;
-I2yx = 0; I2yy = 0; I2yz = 0;
-I2zx = 0; I2zy = 0; I2zz = 0;
+I2xx = 0.00012618; I2xy = 0.00001090; I2xz = 0;
+I2yx = 0.00001090; I2yy = 0.00062333; I2yz = 0;
+I2zx = 0; I2zy = 0; I2zz = 0.00055076;
 
 %% %%%%%%%%%%%%%%%%%% dynamic simulation
 %%%%%%%%%%%%%%%%%%% discrete time
