@@ -13,7 +13,7 @@ g = 9.801; % gravity constant
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%  link properties
 %======================================  link 1
 l1 = 0.235; % length [m]
-d1 = 0.16; % mass center
+d1 = 0.160; % mass center
 m1 = 0.228; % mass [kg]
 % moment of inertia
 I1xx = 0.00006781; I1xy = 0.00002608; I1xz = 0;
@@ -83,9 +83,9 @@ I2zx = 0; I2zy = 0; I2zz = 0.00055076;
      G2 = g*((d1*m1+l1*m2)*cos(theta2)+d2*m2*cos(theta2+theta3));
      G3 = d2*g*m2*cos(theta2+theta3);    
      
-     F1 = 4.65357*dtheta1;
-     F2 = 2.09525*dtheta2;
-     F3 = 4.65357*dtheta3;
+     F1 = Friction([dtheta1; 4.65357; G1]); %0.3*4.65357*(2/(1+exp(-dtheta1))-0.5); %4.65357*dtheta1;      % Signoid function 
+     F2 = Friction([dtheta2; 2.09525; G2]);; %2.09525/(1+exp(-dtheta2)); %2.09525*dtheta2;
+     F3 = Friction([dtheta3; 4.65357; G3]);; %4.65357/(1+exp(-dtheta3)); %4.65357*dtheta3;
     
 %     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  actuator torques
 %     tau_1 = H11*ddtheta_1 + H12*ddtheta_2 - h*(dtheta_2)^2 ...
