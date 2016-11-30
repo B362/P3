@@ -1,0 +1,153 @@
+/***********************************
+ * Hello Robot Arm Example
+ * This sketch is for use with one of the dynamixel based
+ * robot arms at the Automation and Control labs, Aalborg
+ * University.
+ * This sketch brings the arm to an upright position from
+ * whichever position it was in, and starts swaying each
+ * joint +/- 180 degrees sequentially.
+ * Everything happens quite slowly, so you can run this
+ * even if you are not that comfortable with the arms yet.
+ *
+ * 2015 Karl D. Hansen - kdh@es.aau.dk
+ ***********************************/
+ 
+ /***********************************
+ * This is a modified file for the robot control systems 
+ * laboratory fall 2016. 
+ * will do a p control for 7 seconds and then rest for 0.2
+ * seconds. 
+ * Remember to use it with the file log_matlab.m
+ * This program sends a string with 6 values, separated by a comma.
+ *    [position, reference_position, speed, reference_speed, torque, reference_torque]
+ * 
+ *
+ * 2016 Juan D. Flores M. - jddfm@es.aau.dk
+ ************************************/
+
+// Import the ax12 library that provides
+// commands to control the Dynamixel servos.
+#include <ax12.h>
+// Additional dynamixel functionality for MX servos.
+#include <dynamixel_mx.h>
+
+int nominal_positions[5];
+int dir[5];
+long int e,d; 
+
+float Kp = 10;//32.861;
+float wr = 10.0;
+float w = 0.0;
+float torque = 0;
+float ntorque = 0;
+float zero = 0.0;
+float spid , curr, ppos; 
+
+void setup()
+{
+  // Initialize the communication with the servos.
+  // The default baud rate for the robot arms is
+  // 1 Mbps.
+  ax12Init(1000000);
+
+  // Set torque on (stiffen the joints) on all servos.
+  // (ID 254 is the braoadcasting address).
+  TorqueControlDisable(1);
+  TorqueOn(254);
+  // Begin the serial communication
+  Serial.begin(115200);
+
+
+  // Delay a short while to get correct readings.
+  delay(100);
+
+  // Raise the arm to nominal
+  // - Set nominal positions
+  nominal_positions[0] = 2048;
+  nominal_positions[1] = 2048;
+  nominal_positions[2] = 2048;
+  nominal_positions[3] = 2048;
+  nominal_positions[4] = 2048;
+
+
+  to_serial(zero, GetPosition(1), zero, GetSpeed(1), zero, GetCurrent(1));
+  delay(20);
+  to_serial(zero, GetPosition(1), zero, GetSpeed(1), zero, GetCurrent(1));
+  delay(20);
+  to_serial(zero, GetPosition(1), zero, GetSpeed(1), zero, GetCurrent(1));
+  delay(20);
+}
+
+void loop()
+{
+  e = millis();
+  TorqueControlEnable(1);
+  d = millis();
+  while(millis() - e < 1000) //does the kp control for 7 seconds 
+  {
+    control();
+  }
+  TorqueControlDisable(1);
+  delay(2);
+  e = millis();
+  while(millis() -e < 200) //rest 200 ms without doing control 
+  {
+    spid = GetSpeed(1);
+    delay(2);
+    curr = GetCurrent(1);
+    delay(2);
+    ppos =  GetPosition(1);
+    if( millis() - d > 20) 
+    {
+      to_serial(zero, ppos, zero, spid, zero, curr);
+      d = millis();
+    }
+  }
+  //while(true){}; //wait infinitely 
+  delay(2000);
+}
+
+void control()
+{
+  w = GetSpeed(1); //reads the speed 
+  torque = 2500; // calculates de torque based on a proportional gain. 
+  SetTorque(1, torque);
+  delay(2);
+  curr = GetCurrent(1);
+  delay(2);
+  ppos =  GetPosition(1);
+  if( millis() - d > 20) //this executes every 20 miliseconds 
+  {
+    to_serial(zero, ppos, wr, w, torque, curr); //send data 
+    d = millis();
+  }
+}
+
+void to_serial(float posr, float pos, float spedr, float sped, float torr, float tor) //sends the data through serial 
+{
+  Serial.print(posr);
+  Serial.print(",");
+  Serial.print(pos);
+  Serial.print(",");
+  Serial.print(spedr);
+  Serial.print(",");
+  Serial.print(sped);
+  Serial.print(",");
+  Serial.print(torr);
+  Serial.print(",");
+  Serial.println(tor);
+
+  //delay(15);
+}
+
+
+
+
+
+
+
+
+
+
+
+
