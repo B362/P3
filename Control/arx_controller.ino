@@ -19,8 +19,8 @@
 #define TORQUECONVERSION3 1
 
 // Proportional gains
-double pospgain[3] = { 1, 1, 1 };
-double spdpgain[3] = { 1, 1, 1 };
+double pospgain[3] = { 1, 500, 1 };
+double spdpgain[3] = { 1, 23, 1 };
 // Integral gains
 double postigain[3] = { 1, 1, 1 };
 double spdtigain[3] = { 1, 1, 1 };
@@ -80,15 +80,7 @@ void setup()
 	nominal_positions[3] = 2048;
 	nominal_positions[4] = 2048;
 
-
-	to_serial(zero, GetPosition(1), zero, GetSpeed(1), zero, GetCurrent(1));
-	delay(20);
-	to_serial(zero, GetPosition(1), zero, GetSpeed(1), zero, GetCurrent(1));
-	delay(20);
-	to_serial(zero, GetPosition(1), zero, GetSpeed(1), zero, GetCurrent(1));
-	delay(20);
-
-	TorqueControlEnable(1);
+	
 }
 
 //------------------------------------------------VOID-LOOP-----------------------------------------------//
@@ -98,10 +90,16 @@ void loop() {
 	// ARBOTIX RECEIVES DATA FROM TRAJECTORY PLANNING AND FEEDBACK FROM SERVOS
 
 	// Receive data from serial and arm
+        TorqueControlEnable(1);
 
 	double reftheta[3];
 	double refdtheta[3];
 	double refddtheta[3];
+
+	// Simulate a path
+	reftheta[0] = 0;
+	reftheta[2] = 0;
+	reftheta[1] = 2048 + 341 * sin(0.001*millis());
 
 	double fbtheta[3];
 	double fbdtheta[3];
@@ -139,7 +137,7 @@ void loop() {
 	getTorque(fbtheta[0], fbtheta[1], fbtheta[2], refddtheta[0], refddtheta[1], refddtheta[2], &ctrltorque[0], &ctrltorque[1], &ctrltorque[2]);
 
 	// We will have the updated values for the control torques,
-	// so we can add a linear value to convert from Nm to Ampère
+	// so we can add a linear value to convert from Nm to Ampï¿½re
 
 	ctrltorque[0] *= TORQUECONVERSION1;
 	ctrltorque[1] *= TORQUECONVERSION2;
