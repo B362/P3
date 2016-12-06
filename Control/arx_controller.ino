@@ -8,29 +8,20 @@
 #define CONTROLLERTYPE 1
 // Controller codes:
 // 0 - NULL
-// 1 - Proportional
-// 2 - PI
-// 3 - PD
-// 4 - PID
+// 1 - PD
+// 2 - PID
 // Obs.: Controller type will be defined as a case switch structure
 
-#define TORQUECONVERSION1 1
-#define TORQUECONVERSION2 1
-#define TORQUECONVERSION3 1
+#define TORQUECONVERSION1 1000
+#define TORQUECONVERSION2 1000
+#define TORQUECONVERSION3 1000
 
 // Proportional gains
-double pospgain[3] = { 1, 500, 1 };
-double spdpgain[3] = { 1, 23, 1 };
+double pospgain[3] = { 1, 1, 1 };
+double spdpgain[3] = { 1, 1, 1 };
 // Integral gains
 double postigain[3] = { 1, 1, 1 };
-double spdtigain[3] = { 1, 1, 1 };
 double posglobalsum[3] = { 0, 0, 0 };
-double spdglobalsum[3] = { 0, 0, 0 };
-// Differential gains
-double postdgain[3] = { 1, 1, 1 };
-double spdtdgain[3] = { 1, 1, 1 };
-double posglobaldiff[3] = { 0, 0, 0 };
-double spdglobaldiff[3] = { 0, 0, 0 };
 
 double ctrltorque[3] = { 0, 0, 0 };
 // Global register of previous values of theta and dtheta
@@ -64,6 +55,10 @@ void setup()
 	// Set torque on (stiffen the joints) on all servos.
 	// (ID 254 is the braoadcasting address).
 	TorqueControlDisable(1);
+	TorqueControlDisable(2);
+	TorqueControlDisable(3);
+	TorqueControlDisable(4);
+	TorqueControlDisable(5);
 	TorqueOn(254);
 	// Begin the serial communication
 	Serial.begin(115200);
@@ -80,7 +75,43 @@ void setup()
 	nominal_positions[3] = 2048;
 	nominal_positions[4] = 2048;
 
-	
+	// - check how far we are off
+	for (int i = 0; i < 5; ++i){
+		dir[i] = GetPosition(i + 1) - nominal_positions[i];
+	}
+
+	// - Send trajectory
+	bool at_home = false;
+	while (!at_home){
+		for (int i = 0; i < 5; ++i){
+			int set_point = nominal_positions[i] + dir[i];
+			if (dir[i] > 0){
+				dir[i] -= 1;
+			}
+			else if (dir[i] < 0){
+				dir[i] += 1;
+			}
+			SetPosition(i + 1, set_point);
+		}
+
+		// - Check if we are done
+		at_home = true;
+		for (int i = 0; i < 5; ++i){
+			if (dir[i] != 0){
+				at_home = false;
+				break;
+			}
+		}
+
+		// - Delay a while. Increase to move slower.
+		delay(5);
+	}
+
+	TorqueControlEnable(1);
+	TorqueControlEnable(2);
+	TorqueControlEnable(3);
+	TorqueControlDisable(4);
+	TorqueControlDisable(5);
 }
 
 //------------------------------------------------VOID-LOOP-----------------------------------------------//
@@ -90,7 +121,6 @@ void loop() {
 	// ARBOTIX RECEIVES DATA FROM TRAJECTORY PLANNING AND FEEDBACK FROM SERVOS
 
 	// Receive data from serial and arm
-        TorqueControlEnable(1);
 
 	double reftheta[3];
 	double refdtheta[3];
@@ -99,18 +129,18 @@ void loop() {
 	// Simulate a path
 	reftheta[0] = 0;
 	reftheta[2] = 0;
-	reftheta[1] = 2048 + 341 * sin(0.001*millis());
+	reftheta[1] = 0.001534 * (2048 + 341 * sin(0.001*millis())) - 1.571;
 
 	double fbtheta[3];
 	double fbdtheta[3];
 	double fbddtheta[3];
 
 	for (int x = 0; x < 3; x++) {
-		fbtheta[x] = GetPosition(x + 1);
-		fbdtheta[x] = GetSpeed(x + 1);
+		fbtheta[x] = 0.001534 * GetPosition(x + 1) - 1.571;
 
 		refdtheta[x] = (reftheta[x] - prevreftheta[x]) / TIMESTEP;
 		refddtheta[x] = (refdtheta[x] - prevrefdtheta[x]) / TIMESTEP;
+		fbdtheta[x] = (fbtheta[x] - prevfbtheta[x]) / TIMESTEP;
 		fbddtheta[x] = (fbdtheta[x] - prevfbdtheta[x]) / TIMESTEP;
 	}
 
@@ -119,18 +149,44 @@ void loop() {
 	double poserr[3];
 	double spderr[3];
 
-	// P controller
-	for (int x = 0; x < 3; x++)
-	{
-		poserr[x] = pospgain[x] * (reftheta[x] - fbtheta[x]);
-		spderr[x] = spdpgain[x] * (refdtheta[x] - fbdtheta[x]);
+	switch (CONTROLLERTYPE) {
 
-		refddtheta[x] += poserr[x] + spderr[x];
-	}
+	// Simple Feedback (NULL)
+	case 0:
+		for (int x = 0; x < 3; x++)
+		{
+			poserr[x] = (reftheta[x] - fbtheta[x]);
+			spderr[x] = (refdtheta[x] - fbdtheta[x]);
 
-	// PI controller
+			refddtheta[x] += poserr[x] + spderr[x];
+		}
+		break;
+
 	// PD controller
-	// PID controller
+	case 1:
+		for (int x = 0; x < 3; x++)
+		{
+			poserr[x] = pospgain[x] * (reftheta[x] - fbtheta[x]);
+			spderr[x] = spdpgain[x] * (refdtheta[x] - fbdtheta[x]);
+
+			refddtheta[x] += poserr[x] + spderr[x];
+		}
+		break;
+
+	// PID controller ----------- UNDER CONSTRUCTION
+	case 2:
+		for (int x = 0; x < 3; x++)
+		{
+			poserr[x] = pospgain[x] * (reftheta[x] - fbtheta[x]);
+			spderr[x] = spdpgain[x] * (refdtheta[x] - fbdtheta[x]);
+			posglobalsum[x] += poserr[x]; // We are supposed to re-add the sum to the error.
+										//	Verify conditions of discretization.
+
+			refddtheta[x] += poserr[x] + spderr[x];
+		}
+		break;
+
+	}
 
 	// CONVERT ACCELERATION TO TORQUE
 
