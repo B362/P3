@@ -104,8 +104,10 @@ void setup()
 		}
 
 		// - Delay a while. Increase to move slower.
-		delay(5);
+		delay(1);
 	}
+
+	delay(1000);
 
 	TorqueControlEnable(1);
 	TorqueControlEnable(2);
@@ -190,7 +192,7 @@ void loop() {
 
 	// CONVERT ACCELERATION TO TORQUE
 
-	getTorque(fbtheta[0], fbtheta[1], fbtheta[2], refddtheta[0], refddtheta[1], refddtheta[2], &ctrltorque[0], &ctrltorque[1], &ctrltorque[2]);
+//	getTorque(fbtheta[0], fbtheta[1], fbtheta[2], refddtheta[0], refddtheta[1], refddtheta[2], &ctrltorque[0], &ctrltorque[1], &ctrltorque[2]);
 
 	// We will have the updated values for the control torques,
 	// so we can add a linear value to convert from Nm to Amp�re
@@ -214,6 +216,16 @@ void loop() {
 		prevfbtheta[x] = fbtheta[x];
 		prevfbdtheta[x] = fbdtheta[x];
 	}
+
+	Serial.print(reftheta[1]);
+	Serial.print(",");
+	Serial.print(fbtheta[1]);
+	Serial.print(",");
+	Serial.print(refdtheta[1]);
+	Serial.print(",");
+	Serial.print(fbdtheta[1]);
+	Serial.print(",");
+	Serial.println(ctrltorque[1]);
 
 	delay(TIMESTEP); // Here goes the refresh rate
 }
