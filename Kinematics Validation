@@ -1,0 +1,14 @@
+t1=134*pi/180;
+t2=97.2*pi/180;
+t3=150*pi/180;
+Px=0.22*cos(t1)*cos(t2);
+Py=0.22*cos(t2)*sin(t1);
+Pz=0.22*sin(t2);
+D1=cos(t3);
+
+T1 = atan2(0.22*cos(t1)*cos(t2), 0.22*cos(t2)*sin(t1));
+T1d = T1*180/pi
+T3 = atan2(sqrt(1-D1^2),D1);
+T3d = T3*180/pi
+T2 = atan2(Pz,sqrt((Px)^2+(Py)^2)-atan2(0,0.22));
+T2d = T2*180/pi
