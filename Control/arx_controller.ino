@@ -129,9 +129,10 @@ void loop() {
 	double refddtheta[3];
 
 	// Simulate a path
-	reftheta[0] = 0;
-	reftheta[2] = 0;
-	reftheta[1] = 0.001534 * (2048 + 341 * sin(0.001*millis()));
+	refdtheta[0] = 0;
+	refdtheta[2] = 0;
+	refdtheta[1] = sin(0.001*millis());
+
 
 	double fbtheta[3];
 	double fbdtheta[3];
@@ -140,7 +141,7 @@ void loop() {
 	for (int x = 0; x < 3; x++) {
 		fbtheta[x] = 0.001534 * (GetPosition(x + 1) - 2048);
 
-		refdtheta[x] = (reftheta[x] - prevreftheta[x]) / TIMESTEP;
+		reftheta[x] += TIMESTEP * prevrefdtheta[x];
 		refddtheta[x] = (refdtheta[x] - prevrefdtheta[x]) / TIMESTEP;
 		fbdtheta[x] = (fbtheta[x] - prevfbtheta[x]) / TIMESTEP;
 		fbddtheta[x] = (fbdtheta[x] - prevfbdtheta[x]) / TIMESTEP;
@@ -175,14 +176,13 @@ void loop() {
 		}
 		break;
 
-	// PID controller ----------- UNDER CONSTRUCTION
+	// PID controller
 	case 2:
 		for (int x = 0; x < 3; x++)
 		{
-			poserr[x] = pospgain[x] * (reftheta[x] - fbtheta[x]);
+			poserr[x] = pospgain[x] * (reftheta[x] - fbtheta[x]) + postigain[x] * posglobalsum[x];
 			spderr[x] = spdpgain[x] * (refdtheta[x] - fbdtheta[x]);
-			posglobalsum[x] += poserr[x]; // We are supposed to re-add the sum to the error.
-										//	Verify conditions of discretization for integration
+			posglobalsum[x] += TIMESTEP * poserr[x];
 
 			refddtheta[x] += poserr[x] + spderr[x];
 		}
@@ -192,7 +192,7 @@ void loop() {
 
 	// CONVERT ACCELERATION TO TORQUE
 
-//	getTorque(fbtheta[0], fbtheta[1], fbtheta[2], refddtheta[0], refddtheta[1], refddtheta[2], &ctrltorque[0], &ctrltorque[1], &ctrltorque[2]);
+	getTorque(fbtheta[0], fbtheta[1], fbtheta[2], fbdtheta[0], fbdtheta[1], fbdtheta[2], refddtheta[0], refddtheta[1], refddtheta[2], &ctrltorque[0], &ctrltorque[1], &ctrltorque[2]);
 
 	// We will have the updated values for the control torques,
 	// so we can add a linear value to convert from Nm to Amp�re
@@ -230,7 +230,7 @@ void loop() {
 	delay(TIMESTEP); // Here goes the refresh rate
 }
 
-void getTorque(double theta1, double theta2, double theta3, double ddtheta1, double ddtheta2, double ddtheta3, double *torque1, double *torque2, double *torque3)
+void getTorque(double theta1, double theta2, double theta3, double dtheta1, double dtheta2, double dtheta3, double ddtheta1, double ddtheta2, double ddtheta3, double *torque1, double *torque2, double *torque3)
 {
 	//= == == == == == == == == == == == == == == == == == == = link 1
 	double l1 = 0.235; // length[m]
@@ -249,6 +249,7 @@ void getTorque(double theta1, double theta2, double theta3, double ddtheta1, dou
 	double I2yx = 0.00001090; double I2yy = 0.00062333; double I2yz = 0;
 	double I2zx = 0; double I2zy = 0; double I2zz = 0.00055076;
 
+	double g = 9.801;
 	theta2 += 1.571;
 
 	double H11 = (2 * I1zz + 2 * I2zz + pow(d2, 2)*m2 + pow(l1, 2)*m2 + pow(l1, 2)*m2*cos(2 * theta2) + 2 * d2*l1*m2*cos(theta3) + pow(d2, 2)*m2*cos(2 * (theta2 + theta3)) + 2 * d2*l1*m2*cos(2 * theta2 + theta3)) / 2;
@@ -261,9 +262,23 @@ void getTorque(double theta1, double theta2, double theta3, double ddtheta1, dou
 	double H32 = (I2xx + I2yy + 2 * pow(d2, 2)*m2 - I2xx*cos(2 * theta1) + I2yy*cos(2 * theta1) + 2 * d2*l1*m2*cos(theta3) - I2xy*sin(2 * theta1) - I2yx*sin(2 * theta1)) / 2;
 	double H33 = (I2xx + I2yy + 2 * pow(d2, 2)*m2 - I2xx*cos(2 * theta1) + I2yy*cos(2 * theta1) - I2xy*sin(2 * theta1) - I2yx*sin(2 * theta1)) / 2;
 
-	*torque1 = H11*ddtheta1 + H12*ddtheta2 + H13*ddtheta3;
-	*torque2 = H21*ddtheta1 + H22*ddtheta2 + H23*ddtheta3;
-	*torque3 = H31*ddtheta1 + H32*ddtheta2 + H33*ddtheta3;
+	double C11 = 0-2 * m2*(l1*cos(theta2) + d2*cos(theta2+theta3))*(l1*sin(theta2) + d2*sin(theta2+theta3))*dtheta2-2 * d2*m2*(l1*cos(theta2) + d2*cos(theta2+theta3))*sin(theta2+theta3)*dtheta3;
+	double C12 = ((I1xy*cos(2 * theta1) + I1yx*cos(2 * theta1) + I2xy*cos(2 * theta1) + I2yx*cos(2 * theta1) - I1xx*sin(2 * theta1) + I1yy*sin(2 * theta1) - I2xx*sin(2 * theta1) + I2yy*sin(2 * theta1))*dtheta2) / 2.;
+	double C13 = (I2xy*cos(2 * theta1) + I2yx*cos(2 * theta1) - I2xx*sin(2 * theta1) + I2yy*sin(2 * theta1))*dtheta2+((I2xy*cos(2 * theta1) + I2yx*cos(2 * theta1) - I2xx*sin(2 * theta1) + I2yy*sin(2 * theta1))*dtheta3) / 2.;
+	double C21 = ((I1xz*cos(theta1) + I1zx*cos(theta1) + I2xz*cos(theta1) + I2zx*cos(theta1) + I1yz*sin(theta1) + I1zy*sin(theta1) + I2yz*sin(theta1) + I2zy*sin(theta1) + pow(l1, 2)*m2*sin(2 * theta2) + pow(d2, 2)*m2*sin(2 * (theta2+theta3)) + 2 * d2*l1*m2*sin(2 * theta2+theta3))*dtheta1) / 2. + (-(I1xy*cos(2 * theta1)) - I1yx*cos(2 * theta1) - I2xy*cos(2 * theta1) - I2yx*cos(2 * theta1) + I1xx*sin(2 * theta1) - I1yy*sin(2 * theta1) + I2xx*sin(2 * theta1) - I2yy*sin(2 * theta1))*dtheta2+(-(I2xy*cos(2 * theta1)) - I2yx*cos(2 * theta1) + I2xx*sin(2 * theta1) - I2yy*sin(2 * theta1))*dtheta3;
+	double C22 = 0-2 * d2*l1*m2*sin(theta3)*dtheta3;
+	double C23 = 0-(d2*l1*m2*sin(theta3)*dtheta3);
+	double C31 = ((I2xz*cos(theta1) + I2zx*cos(theta1) + I2yz*sin(theta1) + I2zy*sin(theta1) + 2 * d2*l1*m2*cos(theta2)*sin(theta2+theta3) + 2 * pow(d2, 2)*m2*cos(theta2+theta3)*sin(theta2+theta3))*dtheta1) / 2. + (-(I2xy*cos(2 * theta1)) - I2yx*cos(2 * theta1) + I2xx*sin(2 * theta1) - I2yy*sin(2 * theta1))*dtheta2+(-(I2xy*cos(2 * theta1)) - I2yx*cos(2 * theta1) + I2xx*sin(2 * theta1) - I2yy*sin(2 * theta1))*dtheta3;
+	double C32 = d2*l1*m2*sin(theta3)*dtheta2;
+	double C33 = 0;
+
+	double G1 = 0;
+	double G2 = g*(d1*m1*cos(theta2) + l1*m2*cos(theta2) + d2*m2*cos(theta2+theta3));
+	double G3 = d2*g*m2*cos(theta2+theta3);
+
+	*torque1 = H11*ddtheta1 + H12*ddtheta2 + H13*ddtheta3 + C11*dtheta1 + C12*dtheta2 + C13*dtheta3 + G1;
+	*torque2 = H21*ddtheta1 + H22*ddtheta2 + H23*ddtheta3 + C21*dtheta1 + C22*dtheta2 + C23*dtheta3 + G2;
+	*torque3 = H31*ddtheta1 + H32*ddtheta2 + H33*ddtheta3 + C31*dtheta1 + C32*dtheta2 + C33*dtheta3 + G3;
 
 	return;
 }
