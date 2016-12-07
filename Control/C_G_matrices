@@ -1,0 +1,20 @@
+C11 = -2*m2*(l1*Cos(\[Theta]2(t)) + d2*Cos(\[Theta]2(t) + \[Theta]3(t)))*(l1*Sin(\[Theta]2(t)) + d2*Sin(\[Theta]2(t) + \[Theta]3(t)))*Derivative(1)(\[Theta]2)(t) - 
+   2*d2*m2*(l1*Cos(\[Theta]2(t)) + d2*Cos(\[Theta]2(t) + \[Theta]3(t)))*Sin(\[Theta]2(t) + \[Theta]3(t))*Derivative(1)(\[Theta]3)(t)
+C12 = ((I1xy*Cos(2*\[Theta]1(t)) + I1yx*Cos(2*\[Theta]1(t)) + I2xy*Cos(2*\[Theta]1(t)) + I2yx*Cos(2*\[Theta]1(t)) - I1xx*Sin(2*\[Theta]1(t)) + I1yy*Sin(2*\[Theta]1(t)) - I2xx*Sin(2*\[Theta]1(t)) + I2yy*Sin(2*\[Theta]1(t)))*
+     Derivative(1)(\[Theta]2)(t))/2.
+C13 = (I2xy*Cos(2*\[Theta]1(t)) + I2yx*Cos(2*\[Theta]1(t)) - I2xx*Sin(2*\[Theta]1(t)) + I2yy*Sin(2*\[Theta]1(t)))*Derivative(1)(\[Theta]2)(t) + 
+   ((I2xy*Cos(2*\[Theta]1(t)) + I2yx*Cos(2*\[Theta]1(t)) - I2xx*Sin(2*\[Theta]1(t)) + I2yy*Sin(2*\[Theta]1(t)))*Derivative(1)(\[Theta]3)(t))/2.
+C21 = ((I1xz*Cos(\[Theta]1(t)) + I1zx*Cos(\[Theta]1(t)) + I2xz*Cos(\[Theta]1(t)) + I2zx*Cos(\[Theta]1(t)) + I1yz*Sin(\[Theta]1(t)) + I1zy*Sin(\[Theta]1(t)) + I2yz*Sin(\[Theta]1(t)) + I2zy*Sin(\[Theta]1(t)) + 
+        Power(l1,2)*m2*Sin(2*\[Theta]2(t)) + Power(d2,2)*m2*Sin(2*(\[Theta]2(t) + \[Theta]3(t))) + 2*d2*l1*m2*Sin(2*\[Theta]2(t) + \[Theta]3(t)))*Derivative(1)(\[Theta]1)(t))/2. + 
+   (-(I1xy*Cos(2*\[Theta]1(t))) - I1yx*Cos(2*\[Theta]1(t)) - I2xy*Cos(2*\[Theta]1(t)) - I2yx*Cos(2*\[Theta]1(t)) + I1xx*Sin(2*\[Theta]1(t)) - I1yy*Sin(2*\[Theta]1(t)) + I2xx*Sin(2*\[Theta]1(t)) - I2yy*Sin(2*\[Theta]1(t)))*
+    Derivative(1)(\[Theta]2)(t) + (-(I2xy*Cos(2*\[Theta]1(t))) - I2yx*Cos(2*\[Theta]1(t)) + I2xx*Sin(2*\[Theta]1(t)) - I2yy*Sin(2*\[Theta]1(t)))*Derivative(1)(\[Theta]3)(t)
+C22 = -2*d2*l1*m2*Sin(\[Theta]3(t))*Derivative(1)(\[Theta]3)(t)
+C23 = -(d2*l1*m2*Sin(\[Theta]3(t))*Derivative(1)(\[Theta]3)(t))
+C31 = ((I2xz*Cos(\[Theta]1(t)) + I2zx*Cos(\[Theta]1(t)) + I2yz*Sin(\[Theta]1(t)) + I2zy*Sin(\[Theta]1(t)) + 2*d2*l1*m2*Cos(\[Theta]2(t))*Sin(\[Theta]2(t) + \[Theta]3(t)) + 2*Power(d2,2)*m2*Cos(\[Theta]2(t) + \[Theta]3(t))*Sin(\[Theta]2(t) + \[Theta]3(t)))*
+      Derivative(1)(\[Theta]1)(t))/2. + (-(I2xy*Cos(2*\[Theta]1(t))) - I2yx*Cos(2*\[Theta]1(t)) + I2xx*Sin(2*\[Theta]1(t)) - I2yy*Sin(2*\[Theta]1(t)))*Derivative(1)(\[Theta]2)(t) + 
+   (-(I2xy*Cos(2*\[Theta]1(t))) - I2yx*Cos(2*\[Theta]1(t)) + I2xx*Sin(2*\[Theta]1(t)) - I2yy*Sin(2*\[Theta]1(t)))*Derivative(1)(\[Theta]3)(t)
+C32 = d2*l1*m2*Sin(\[Theta]3(t))*Derivative(1)(\[Theta]2)(t)
+C33 = 0
+G1 = 0
+G2 = g*(d1*m1*Cos(\[Theta]2(t)) + l1*m2*Cos(\[Theta]2(t)) + d2*m2*Cos(\[Theta]2(t) + \[Theta]3(t)))
+G3 = d2*g*m2*Cos(\[Theta]2(t) + \[Theta]3(t))
