@@ -129,14 +129,14 @@ void loop() {
 	// Simulate a path
 	reftheta[0] = 0;
 	reftheta[2] = 0;
-	reftheta[1] = 0.001534 * (2048 + 341 * sin(0.001*millis())) - 1.571;
+	reftheta[1] = 0.001534 * (2048 + 341 * sin(0.001*millis()));
 
 	double fbtheta[3];
 	double fbdtheta[3];
 	double fbddtheta[3];
 
 	for (int x = 0; x < 3; x++) {
-		fbtheta[x] = 0.001534 * GetPosition(x + 1) - 1.571;
+		fbtheta[x] = (0.001534 * GetPosition(x + 1));
 
 		refdtheta[x] = (reftheta[x] - prevreftheta[x]) / TIMESTEP;
 		refddtheta[x] = (refdtheta[x] - prevrefdtheta[x]) / TIMESTEP;
@@ -180,7 +180,7 @@ void loop() {
 			poserr[x] = pospgain[x] * (reftheta[x] - fbtheta[x]);
 			spderr[x] = spdpgain[x] * (refdtheta[x] - fbdtheta[x]);
 			posglobalsum[x] += poserr[x]; // We are supposed to re-add the sum to the error.
-										//	Verify conditions of discretization.
+										//	Verify conditions of discretization for integration
 
 			refddtheta[x] += poserr[x] + spderr[x];
 		}
@@ -190,7 +190,7 @@ void loop() {
 
 	// CONVERT ACCELERATION TO TORQUE
 
-	getTorque(fbtheta[0], fbtheta[1], fbtheta[2], refddtheta[0], refddtheta[1], refddtheta[2], &ctrltorque[0], &ctrltorque[1], &ctrltorque[2]);
+//	getTorque(fbtheta[0], fbtheta[1], fbtheta[2], refddtheta[0], refddtheta[1], refddtheta[2], &ctrltorque[0], &ctrltorque[1], &ctrltorque[2]);
 
 	// We will have the updated values for the control torques,
 	// so we can add a linear value to convert from Nm to Amp�re
