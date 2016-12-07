@@ -17,8 +17,8 @@
 #define TORQUECONVERSION3 1000
 
 // Proportional gains
-double pospgain[3] = { 1, 1, 1 };
-double spdpgain[3] = { 1, 1, 1 };
+double pospgain[3] = { 500, 500, 500 };
+double spdpgain[3] = { 23, 23, 23 };
 // Integral gains
 double postigain[3] = { 1, 1, 1 };
 double posglobalsum[3] = { 0, 0, 0 };
@@ -136,7 +136,7 @@ void loop() {
 	double fbddtheta[3];
 
 	for (int x = 0; x < 3; x++) {
-		fbtheta[x] = (0.001534 * GetPosition(x + 1));
+		fbtheta[x] = 0.001534 * (GetPosition(x + 1) - 2048);
 
 		refdtheta[x] = (reftheta[x] - prevreftheta[x]) / TIMESTEP;
 		refddtheta[x] = (refdtheta[x] - prevrefdtheta[x]) / TIMESTEP;
@@ -190,7 +190,7 @@ void loop() {
 
 	// CONVERT ACCELERATION TO TORQUE
 
-//	getTorque(fbtheta[0], fbtheta[1], fbtheta[2], refddtheta[0], refddtheta[1], refddtheta[2], &ctrltorque[0], &ctrltorque[1], &ctrltorque[2]);
+	getTorque(fbtheta[0], fbtheta[1], fbtheta[2], refddtheta[0], refddtheta[1], refddtheta[2], &ctrltorque[0], &ctrltorque[1], &ctrltorque[2]);
 
 	// We will have the updated values for the control torques,
 	// so we can add a linear value to convert from Nm to Amp�re
@@ -236,6 +236,8 @@ void getTorque(double theta1, double theta2, double theta3, double ddtheta1, dou
 	double I2xx = 0.00012618; double I2xy = 0.00001090; double I2xz = 0;
 	double I2yx = 0.00001090; double I2yy = 0.00062333; double I2yz = 0;
 	double I2zx = 0; double I2zy = 0; double I2zz = 0.00055076;
+
+	theta2 += 1.571;
 
 	double H11 = (2 * I1zz + 2 * I2zz + pow(d2, 2)*m2 + pow(l1, 2)*m2 + pow(l1, 2)*m2*cos(2 * theta2) + 2 * d2*l1*m2*cos(theta3) + pow(d2, 2)*m2*cos(2 * (theta2 + theta3)) + 2 * d2*l1*m2*cos(2 * theta2 + theta3)) / 2;
 	double H12 = (0 - (I1yz*cos(theta1)) - I1zy*cos(theta1) - I2yz*cos(theta1) - I2zy*cos(theta1) + I1xz*sin(theta1) + I1zx*sin(theta1) + I2xz*sin(theta1) + I2zx*sin(theta1)) / 2;
