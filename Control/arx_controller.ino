@@ -4,7 +4,7 @@
 
 // DEFINITIONS
 
-#define TIMESTEP 5
+#define TIMESTEP 0.005	// In seconds
 
 #define TORQUECONVERSION1 1000
 #define TORQUECONVERSION2 1000
@@ -137,11 +137,11 @@ void loop() {
         fbtheta[2] = 0.001534 * (GetPosition(3) - 2048);
 
 	for (int x = 0; x < 3; x++) {
-//		reftheta[x] += (1000 * TIMESTEP) * prevrefdtheta[x];
-		refdtheta[x] = (reftheta[x] - prevreftheta[x]) / (1000 * TIMESTEP);
-		refddtheta[x] = (refdtheta[x] - prevrefdtheta[x]) / (1000 * TIMESTEP);
-		fbdtheta[x] = (fbtheta[x] - prevfbtheta[x]) / (1000 * TIMESTEP);
-		fbddtheta[x] = (fbdtheta[x] - prevfbdtheta[x]) / (1000 * TIMESTEP);
+//		reftheta[x] += TIMESTEP * prevrefdtheta[x];
+		refdtheta[x] = (reftheta[x] - prevreftheta[x]) / TIMESTEP;
+		refddtheta[x] = (refdtheta[x] - prevrefdtheta[x]) / TIMESTEP;
+		fbdtheta[x] = (fbtheta[x] - prevfbtheta[x]) / TIMESTEP;
+		fbddtheta[x] = (fbdtheta[x] - prevfbdtheta[x]) / TIMESTEP;
 	}
 
 	// SET BOUNDARIES FOR THE ARM POSITION
@@ -159,7 +159,7 @@ void loop() {
 		{
 			poserr[x] = pospgain[x] * (reftheta[x] - fbtheta[x]) + postigain[x] * posglobalsum[x];
 			spderr[x] = spdpgain[x] * (refdtheta[x] - fbdtheta[x]);
-			posglobalsum[x] += (1000 * TIMESTEP) * poserr[x];
+			posglobalsum[x] += TIMESTEP * poserr[x];
 
 			refddtheta[x] += poserr[x] + spderr[x];
 		}
@@ -203,7 +203,7 @@ void loop() {
 	Serial.print(",");
 	Serial.println(0.001 * ctrltorque[2]);
 
-	delay(TIMESTEP); // Here goes the refresh rate
+	delay(1000 * TIMESTEP); // Here goes the refresh rate
 }
 
 void getTorque(double theta1, double theta2, double theta3, double dtheta1, double dtheta2, double dtheta3, double ddtheta1, double ddtheta2, double ddtheta3, double *torque1, double *torque2, double *torque3)
