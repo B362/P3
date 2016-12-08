@@ -98,7 +98,7 @@ void setup()
 		}
 
 		// - Delay a while. Increase to move slower.
-		delay(1);
+		delay(5);
 	}
 
 	delay(1000);
@@ -123,9 +123,9 @@ void loop() {
 	double refddtheta[3];
 
 	// Simulate a path
-	refdtheta[0] = 0;
+	refdtheta[0] = 0.5;
+	refdtheta[1] = 0; //sin(0.001*millis());
 	refdtheta[2] = 0;
-	refdtheta[1] = sin(0.001*millis());
 
 
 	double fbtheta[3];
