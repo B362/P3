@@ -1,0 +1,15 @@
+close all
+clear all
+
+s = tf('s');
+kp = 1;
+kv = 1;
+A = (kp)/((s+kv)*s);
+figure
+hold on
+margin(A)
+
+kp2 = 10;
+kv2 = 10;
+A2 = (kp2)/((s+kv2)*s);
+margin(A2)
