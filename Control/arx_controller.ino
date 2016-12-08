@@ -137,11 +137,11 @@ void loop() {
         fbtheta[2] = 0.001534 * (GetPosition(3) - 2048);
 
 	for (int x = 0; x < 3; x++) {
-//		reftheta[x] += TIMESTEP * prevrefdtheta[x];
-		refdtheta[x] = (reftheta[x] - prevreftheta[x]) / TIMESTEP;
-		refddtheta[x] = (refdtheta[x] - prevrefdtheta[x]) / TIMESTEP;
-		fbdtheta[x] = (fbtheta[x] - prevfbtheta[x]) / TIMESTEP;
-		fbddtheta[x] = (fbdtheta[x] - prevfbdtheta[x]) / TIMESTEP;
+//		reftheta[x] += (1000 * TIMESTEP) * prevrefdtheta[x];
+		refdtheta[x] = (reftheta[x] - prevreftheta[x]) / (1000 * TIMESTEP);
+		refddtheta[x] = (refdtheta[x] - prevrefdtheta[x]) / (1000 * TIMESTEP);
+		fbdtheta[x] = (fbtheta[x] - prevfbtheta[x]) / (1000 * TIMESTEP);
+		fbddtheta[x] = (fbdtheta[x] - prevfbdtheta[x]) / (1000 * TIMESTEP);
 	}
 
 	// SET BOUNDARIES FOR THE ARM POSITION
@@ -153,13 +153,13 @@ void loop() {
 	// THE MAGIC HAPPENS HERE
 
 	double poserr[3];
-	double spderr[3];g8
+	double spderr[3];
 
 		for (int x = 0; x < 3; x++)
 		{
 			poserr[x] = pospgain[x] * (reftheta[x] - fbtheta[x]) + postigain[x] * posglobalsum[x];
 			spderr[x] = spdpgain[x] * (refdtheta[x] - fbdtheta[x]);
-			posglobalsum[x] += TIMESTEP * poserr[x];
+			posglobalsum[x] += (1000 * TIMESTEP) * poserr[x];
 
 			refddtheta[x] += poserr[x] + spderr[x];
 		}
