@@ -5,12 +5,6 @@
 // DEFINITIONS
 
 #define TIMESTEP 5
-#define CONTROLLERTYPE 1
-// Controller codes:
-// 0 - NULL
-// 1 - PD
-// 2 - PID
-// Obs.: Controller type will be defined as a case switch structure
 
 #define TORQUECONVERSION1 1000
 #define TORQUECONVERSION2 1000
@@ -20,7 +14,7 @@
 double pospgain[3] = { 500, 500, 500 };
 double spdpgain[3] = { 23, 23, 23 };
 // Integral gains
-double postigain[3] = { 1, 1, 1 };
+double postigain[3] = { 0, 0, 0 };
 double posglobalsum[3] = { 0, 0, 0 };
 
 double ctrltorque[3] = { 0, 0, 0 };
@@ -152,32 +146,6 @@ void loop() {
 	double poserr[3];
 	double spderr[3];
 
-	switch (CONTROLLERTYPE) {
-
-	// Simple Feedback (NULL)
-	case 0:
-		for (int x = 0; x < 3; x++)
-		{
-			poserr[x] = (reftheta[x] - fbtheta[x]);
-			spderr[x] = (refdtheta[x] - fbdtheta[x]);
-
-			refddtheta[x] += poserr[x] + spderr[x];
-		}
-		break;
-
-	// PD controller
-	case 1:
-		for (int x = 0; x < 3; x++)
-		{
-			poserr[x] = pospgain[x] * (reftheta[x] - fbtheta[x]);
-			spderr[x] = spdpgain[x] * (refdtheta[x] - fbdtheta[x]);
-
-			refddtheta[x] += poserr[x] + spderr[x];
-		}
-		break;
-
-	// PID controller
-	case 2:
 		for (int x = 0; x < 3; x++)
 		{
 			poserr[x] = pospgain[x] * (reftheta[x] - fbtheta[x]) + postigain[x] * posglobalsum[x];
@@ -186,9 +154,6 @@ void loop() {
 
 			refddtheta[x] += poserr[x] + spderr[x];
 		}
-		break;
-
-	}
 
 	// CONVERT ACCELERATION TO TORQUE
 
