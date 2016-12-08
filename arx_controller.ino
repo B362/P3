@@ -123,18 +123,20 @@ void loop() {
 	double refddtheta[3];
 
 	// Simulate a path
-	refdtheta[0] = 0.5;
-	refdtheta[1] = 0; //sin(0.001*millis());
-	refdtheta[2] = 0;
+	reftheta[0] = 0;
+	reftheta[1] = sin(0.001*millis());
+	reftheta[2] = 0;
 
 
 	double fbtheta[3];
 	double fbdtheta[3];
 	double fbddtheta[3];
 
-	for (int x = 0; x < 3; x++) {
-		fbtheta[x] = 0.001534 * (GetPosition(x + 1) - 2048);
+        fbtheta[0] = 0.001534 * (GetPosition(1) - 2048);
+        fbtheta[1] = 0.001534 * (GetPosition(2) - 2048);
+        fbtheta[2] = 0.001534 * (GetPosition(3) - 2048);
 
+	for (int x = 0; x < 3; x++) {
 		reftheta[x] += TIMESTEP * prevrefdtheta[x];
 		refddtheta[x] = (refdtheta[x] - prevrefdtheta[x]) / TIMESTEP;
 		fbdtheta[x] = (fbtheta[x] - prevfbtheta[x]) / TIMESTEP;
@@ -143,14 +145,14 @@ void loop() {
 
 	// SET BOUNDARIES FOR THE ARM POSITION
 
-	if (reftheta[0] >= 6.25 || reftheta[0] <= 0) refdtheta[0] = 0;
-	if (reftheta[1] >= 4.7 || reftheta[1] <= 1.55) refdtheta[1] = 0;
-	if (reftheta[2] >= 4.7 || reftheta[2] <= 1.55) refdtheta[2] = 0;
+	if (reftheta[0] >= 6.25 || reftheta[0] <= 0) refdtheta[0] = prevreftheta[0];
+	if (reftheta[1] >= 4.7 || reftheta[1] <= 1.55) refdtheta[1] = prevreftheta[1];
+	if (reftheta[2] >= 4.7 || reftheta[2] <= 1.55) refdtheta[2] = prevreftheta[2];
 
 	// THE MAGIC HAPPENS HERE
 
 	double poserr[3];
-	double spderr[3];
+	double spderr[3];g8
 
 		for (int x = 0; x < 3; x++)
 		{
@@ -188,15 +190,17 @@ void loop() {
 		prevfbdtheta[x] = fbdtheta[x];
 	}
 
-	Serial.print(reftheta[1]);
+	Serial.print(fbtheta[0]);
 	Serial.print(",");
 	Serial.print(fbtheta[1]);
 	Serial.print(",");
-	Serial.print(refdtheta[1]);
+	Serial.print(fbtheta[2]);
 	Serial.print(",");
-	Serial.print(fbdtheta[1]);
+	Serial.print(0.001 * ctrltorque[0]);
 	Serial.print(",");
-	Serial.println(ctrltorque[1]);
+	Serial.print(0.001 * ctrltorque[1]);
+	Serial.print(",");
+	Serial.println(0.001 * ctrltorque[2]);
 
 	delay(TIMESTEP); // Here goes the refresh rate
 }
