@@ -92,6 +92,7 @@ theta2o(1) = 0; dtheta2o(1) = 0; ddtheta2o(1) = 0;
 theta1(1) = pi/4; dtheta1(1) = 0; ddtheta1(1) = 0;
 theta2(1) = 0; dtheta2(1) = 0; ddtheta2(1) = 0;
 theta3(1) = 0; dtheta3(1) = 0; ddtheta3(1) = 0;
+omega1(1) = 0; omega2(1) = 0; omega3(1) = 0;
 
 Ni = length(time)
 
@@ -149,23 +150,30 @@ for ii = 1:Ni-1
  F2 = 0.685*2*(1/(1 + exp(-2*dtheta2(ii))) - 0.5) + (0.02*(dtheta2(ii)));
  F3 = 0.39*2*(1/(1 + exp(-5*dtheta3(ii))) - 0.5) + (0.008*(dtheta3(ii)));
 
-M = [H11 H12 H13; H21 H22 H23; H31 H32 H33];
-alpha = [H11 H12 H13; H21 H22 H23; H31 H32 H33];
 G1 = 0;
 G2 = g*((lc1*m1+l1*m2)*cos(theta2(ii))+lc2*m2*cos(theta2(ii)+theta3(ii)));
 G3 = lc2*g*m2*cos(theta2(ii)+theta3(ii));   
 
+M = [H11 H12 H13; H21 H22 H23; H31 H32 H33];
+alpha = [H11 H12 H13; H21 H22 H23; H31 H32 H33];
 
-beta = [C11 C12 C13; C21 C22 C23; C31 C32 C33]+[G1;G2;G3]+[F1; F2; F3];
-taup1 = kp1*(theta1ref(ii)-theta1(ii))-kv1*dtheta1(ii)+kv1*omega1ref(ii)+acc1ref(ii);
-taup2 = kp2*(theta2ref(ii)-theta2(ii))-kv2*dtheta2(ii)+kv2*omega2ref(ii)+acc2ref(ii);
-taup3 = kp3*(theta3ref(ii)-theta3(ii))-kv3*dtheta3(ii)+kv3*omega3ref(ii)+acc3ref(ii);
+nlpt = [C11 C12 C13; C21 C22 C23; C31 C32 C33]+[G1;G2;G3]+[F1; F2; F3]; %The nonlinear part of the system
+beta = [C11 C12 C13; C21 C22 C23; C31 C32 C33]+[G1;G2;G3]+[F1; F2; F3]; %The compensator
+taup1 = kp1*(theta1ref(ii)-theta1(ii))-kv1*dtheta1(ii)+kv1*(omega1ref(ii)-omega1(ii))+acc1ref(ii);
+taup2 = kp2*(theta2ref(ii)-theta2(ii))-kv2*dtheta2(ii)+kv2*(omega2ref(ii)-omega2(ii))+acc2ref(ii);
+taup3 = kp3*(theta3ref(ii)-theta3(ii))-kv3*dtheta3(ii)+kv3*(omega3ref(ii)-omega3(ii))+acc3ref(ii);
 tau = alpha*[taup1;taup2;taup3];%+beta; %With or without the compensator
 %simulation step
 theta1(ii+1) = theta1(ii)+dt*dtheta1(ii);
 theta2(ii+1) = theta2(ii)+dt*dtheta2(ii);
 theta3(ii+1) = theta3(ii)+dt*dtheta3(ii);
-acc = alpha\(tau-beta);
+acc = M\(tau-nlpt);
+
+%used as feedback for calculating the speed error
+omega1(ii+1) = (theta1(ii+1)-theta1(ii))/dt;
+omega2(ii+1) = (theta2(ii+1)-theta2(ii))/dt;
+omega3(ii+1) = (theta3(ii+1)-theta3(ii))/dt;
+
 ddtheta1(ii) = acc(1);
 ddtheta2(ii) = acc(2);
 ddtheta3(ii) = acc(3);
@@ -175,9 +183,7 @@ dtheta3(ii+1) = dtheta3(ii)+dt*acc(3);
 end
 
 
-
-
-
+% Plotting everything
 time = dt*(0:length(theta1)-1);
 figure(1), plot(time,theta1ref,time,theta1)
 xlabel('time [sec]')
