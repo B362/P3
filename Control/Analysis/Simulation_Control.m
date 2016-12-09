@@ -157,10 +157,10 @@ G3 = lc2*g*m2*cos(theta2(ii)+theta3(ii));
 
 
 beta = [C11 C12 C13; C21 C22 C23; C31 C32 C33]+[G1;G2;G3]+[F1; F2; F3];
-taup1 = kp1*(theta1ref(ii)-theta1(ii))-kv1*dtheta1(ii)+kv1*omega1ref(ii);%+acc1ref(ii);
-taup2 = kp2*(theta2ref(ii)-theta2(ii))-kv2*dtheta2(ii)+kv2*omega2ref(ii);%+acc2ref(ii);
-taup3 = kp3*(theta3ref(ii)-theta3(ii))-kv3*dtheta3(ii)+kv3*omega3ref(ii);%+acc3ref(ii);
-tau = alpha*[taup1;taup2;taup3]+beta;
+taup1 = kp1*(theta1ref(ii)-theta1(ii))-kv1*dtheta1(ii)+kv1*omega1ref(ii)+acc1ref(ii);
+taup2 = kp2*(theta2ref(ii)-theta2(ii))-kv2*dtheta2(ii)+kv2*omega2ref(ii)+acc2ref(ii);
+taup3 = kp3*(theta3ref(ii)-theta3(ii))-kv3*dtheta3(ii)+kv3*omega3ref(ii)+acc3ref(ii);
+tau = alpha*[taup1;taup2;taup3];%+beta; %With or without the compensator
 %simulation step
 theta1(ii+1) = theta1(ii)+dt*dtheta1(ii);
 theta2(ii+1) = theta2(ii)+dt*dtheta2(ii);
