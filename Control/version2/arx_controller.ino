@@ -9,8 +9,8 @@
 
 // DEFINITIONS
 
-#define TIMESTEP 0.3	// In seconds
-#define TESTSPEED 0.05
+#define TIMESTEP 0.2	// In seconds
+#define TESTSPEED 0.00001
 #define TORQUECONVERSION1 1000
 #define TORQUECONVERSION2 1000
 #define TORQUECONVERSION3 1000
@@ -133,43 +133,51 @@ void loop() {
 		control(TESTSPEED, 0, 0);
 		delay(1000 * TIMESTEP);
 	}
+	delay(500);
 	while (GetPosition(1) > 1024) {
 		control(-TESTSPEED, 0, 0);
 		delay(1000 * TIMESTEP);
 	}
+	delay(500);
 	while (GetPosition(1) < 2048) {
 		control(TESTSPEED, 0, 0);
 		delay(1000 * TIMESTEP);
 	}
+	delay(500);
 
 	// Servo 2
 	while (GetPosition(2) < 3072) {
 		control(0, TESTSPEED, 0);
 		delay(1000 * TIMESTEP);
 	}
+	delay(500);
 	while (GetPosition(2) > 1024) {
 		control(0, -TESTSPEED, 0);
 		delay(1000 * TIMESTEP);
 	}
+	delay(500);
 	while (GetPosition(2) < 2048) {
 		control(0, TESTSPEED, 0);
 		delay(1000 * TIMESTEP);
 	}
+	delay(500);
 
 	// Servo 3
 	while (GetPosition(3) < 3072) {
 		control(0, 0, TESTSPEED);
 		delay(1000 * TIMESTEP);
 	}
+	delay(500);
 	while (GetPosition(3) > 1024) {
 		control(0, 0, -TESTSPEED);
 		delay(1000 * TIMESTEP);
 	}
+	delay(500);
 	while (GetPosition(3) < 2048) {
 		control(0, 0, TESTSPEED);
 		delay(1000 * TIMESTEP);
 	}
-	delay(100);
+	delay(1000);
 }
 
 //------------------------------------------------CONTROLLER-----------------------------------------------//
@@ -358,9 +366,9 @@ void getTorque(double theta1, double theta2, double theta3, double dtheta1, doub
 	double G2 = g*(d1*m1*cos(theta2) + l1*m2*cos(theta2) + d2*m2*cos(theta2+theta3));
 	double G3 = d2*g*m2*cos(theta2+theta3);
 
-	*torque1 = H11*ddtheta1 + H12*ddtheta2 + H13*ddtheta3 + C11*dtheta1 + C12*dtheta2 + C13*dtheta3 + G1 + ctsign(0.2);
-	*torque2 = H21*ddtheta1 + H22*ddtheta2 + H23*ddtheta3 + C21*dtheta1 + C22*dtheta2 + C23*dtheta3 + G2 + ctsign(0.75);
-	*torque3 = H31*ddtheta1 + H32*ddtheta2 + H33*ddtheta3 + C31*dtheta1 + C32*dtheta2 + C33*dtheta3 + G3 + ctsign(0.4);
+	*torque1 = H11*ddtheta1 + H12*ddtheta2 + H13*ddtheta3 + C11*dtheta1 + C12*dtheta2 + C13*dtheta3 + G1 + 0.2 * ctsign(dtheta1);
+	*torque2 = H21*ddtheta1 + H22*ddtheta2 + H23*ddtheta3 + C21*dtheta1 + C22*dtheta2 + C23*dtheta3 + G2 + 0.75 * ctsign(dtheta2);
+	*torque3 = H31*ddtheta1 + H32*ddtheta2 + H33*ddtheta3 + C31*dtheta1 + C32*dtheta2 + C33*dtheta3 + G3 + 0.4 * ctsign(dtheta3);
 
 	return;
 }
