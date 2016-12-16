@@ -9,8 +9,8 @@
 
 // DEFINITIONS
 
-#define TIMESTEP 0.1	// In seconds
-#define TESTSPEED 0.1
+#define TIMESTEP 0.3	// In seconds
+#define TESTSPEED 0.05
 #define TORQUECONVERSION1 1000
 #define TORQUECONVERSION2 1000
 #define TORQUECONVERSION3 1000
@@ -113,7 +113,7 @@ void setup()
 	//SetPidGains(1, 0, 0, 0);
 	//SetPidGains(2, 0, 0, 0);
 	//SetPidGains(3, 0, 0, 0);
-	delay(500);
+	delay(200);
 
 //	TorqueControlEnable(1);
 //	TorqueControlEnable(2);
