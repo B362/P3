@@ -9,8 +9,8 @@
 
 // DEFINITIONS
 
-#define TIMESTEP 0.005	// In seconds
-
+#define TIMESTEP 0.1	// In seconds
+#define TESTSPEED 0.1
 #define TORQUECONVERSION1 1000
 #define TORQUECONVERSION2 1000
 #define TORQUECONVERSION3 1000
@@ -130,43 +130,43 @@ void loop() {
 
 	// Servo 1
 	while (GetPosition(1) < 3072) {
-		control(0.5, 0, 0);
+		control(TESTSPEED, 0, 0);
 		delay(1000 * TIMESTEP);
 	}
 	while (GetPosition(1) > 1024) {
-		control(-0.5, 0, 0);
+		control(-TESTSPEED, 0, 0);
 		delay(1000 * TIMESTEP);
 	}
 	while (GetPosition(1) < 2048) {
-		control(0.5, 0, 0);
+		control(TESTSPEED, 0, 0);
 		delay(1000 * TIMESTEP);
 	}
 
 	// Servo 2
 	while (GetPosition(2) < 3072) {
-		control(0, 0.5, 0);
+		control(0, TESTSPEED, 0);
 		delay(1000 * TIMESTEP);
 	}
 	while (GetPosition(2) > 1024) {
-		control(0, -0.5, 0);
+		control(0, -TESTSPEED, 0);
 		delay(1000 * TIMESTEP);
 	}
 	while (GetPosition(2) < 2048) {
-		control(0, 0.5, 0);
+		control(0, TESTSPEED, 0);
 		delay(1000 * TIMESTEP);
 	}
 
 	// Servo 3
 	while (GetPosition(3) < 3072) {
-		control(0, 0, 0.5);
+		control(0, 0, TESTSPEED);
 		delay(1000 * TIMESTEP);
 	}
 	while (GetPosition(3) > 1024) {
-		control(0, 0, -0.5);
+		control(0, 0, -TESTSPEED);
 		delay(1000 * TIMESTEP);
 	}
 	while (GetPosition(3) < 2048) {
-		control(0, 0, 0.5);
+		control(0, 0, TESTSPEED);
 		delay(1000 * TIMESTEP);
 	}
 	delay(100);
@@ -249,7 +249,7 @@ void control(double speed1, double speed2, double speed3) {
 			TorqueControlDisable(1);
 			tenabled[0] = false;
 		}
-		SetPosition(1, reftheta[0]);
+		SetPosition(1, fbtheta[0]);
 	}
 	else {
 		if (!tenabled[0]) {
@@ -264,7 +264,7 @@ void control(double speed1, double speed2, double speed3) {
 			TorqueControlDisable(2);
 			tenabled[1] = false;
 		}
-		SetPosition(2, reftheta[1]);
+		SetPosition(2, fbtheta[1]);
 	}
 	else {
 		if (!tenabled[1]) {
@@ -279,7 +279,7 @@ void control(double speed1, double speed2, double speed3) {
 			TorqueControlDisable(3);
 			tenabled[2] = false;
 		}
-		SetPosition(3, reftheta[2]);
+		SetPosition(3, fbtheta[2]);
 	}
 	else {
 		if (!tenabled[2]) {
