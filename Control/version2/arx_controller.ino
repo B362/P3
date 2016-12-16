@@ -11,13 +11,13 @@
 
 #define TIMESTEP 0.005	// In seconds
 
-#define TORQUECONVERSION1 700
-#define TORQUECONVERSION2 700
-#define TORQUECONVERSION3 700
+#define TORQUECONVERSION1 1000
+#define TORQUECONVERSION2 1000
+#define TORQUECONVERSION3 1000
 
 // Proportional gains
 double pospgain[3] = { 3.015, 3.015, 3.015 };
-double spdpgain[3] = { 3.473, 3.473, 3.473 };
+double spdpgain[3] = { 30.15, 30.15, 30.15 };
 // Integral gains
 double postigain[3] = { 0, 0, 0 };
 double posglobalsum[3] = { 0, 0, 0 };
@@ -29,6 +29,8 @@ double prevreftheta[3] = { 0, 0, 0 };
 double prevrefdtheta[3] = { 0, 0, 0 };
 double prevfbtheta[3] = { 0, 0, 0 };
 double prevfbdtheta[3] = { 0, 0, 0 };
+// Has torque been enabled?
+bool tenabled[3];
 
 //-----------------------------------------------SETUP-ROUTINE--------------------------------------------//
 
@@ -58,13 +60,15 @@ void setup()
 	TorqueControlDisable(3);
 	TorqueControlDisable(4);
 	TorqueControlDisable(5);
+	for (int i = 0; i < 3; i++) tenabled[i] = false;
 	TorqueOn(254);
 	// Begin the serial communication
 	Serial.begin(115200);
 
 
 	// Delay a short while to get correct readings.
-	delay(100);
+	delay(200);
+    Serial.println('RS');
 
 	// Raise the arm to nominal
 	// - Set nominal positions
@@ -105,17 +109,17 @@ void setup()
 		// - Delay a while. Increase to move slower.
 		delay(5);
 	}
-
+        Serial.println('OK!');
 	//SetPidGains(1, 0, 0, 0);
 	//SetPidGains(2, 0, 0, 0);
 	//SetPidGains(3, 0, 0, 0);
 	delay(500);
 
-	TorqueControlEnable(1);
-	TorqueControlEnable(2);
-	TorqueControlEnable(3);
-	TorqueControlDisable(5);
-	TorqueControlDisable(6);
+//	TorqueControlEnable(1);
+//	TorqueControlEnable(2);
+//	TorqueControlEnable(3);
+//	TorqueControlDisable(5);
+//	TorqueControlDisable(6);
 }
 
 //------------------------------------------------VOID-LOOP-----------------------------------------------//
@@ -240,19 +244,48 @@ void control(double speed1, double speed2, double speed3) {
 	//SetTorque(2, ctrltorque[1]);
 	//SetTorque(3, ctrltorque[2]);
 
-	if (refdtheta[0] == 0) TorqueControlDisable(1);
+	if (refdtheta[0] == 0) {
+		if (tenabled[0]) {
+			TorqueControlDisable(1);
+			tenabled[0] = false;
+		}
+		SetPosition(1, reftheta[0]);
+	}
 	else {
-		TorqueControlEnable(1);
+		if (!tenabled[0]) {
+			TorqueControlEnable(1);
+			tenabled[0] = true;
+		}
 		SetTorque(1, ctrltorque[0]);
 	}
-	if (refdtheta[1] == 0) TorqueControlDisable(2);
+
+	if (refdtheta[1] == 0) {
+		if (tenabled[1]) {
+			TorqueControlDisable(2);
+			tenabled[1] = false;
+		}
+		SetPosition(2, reftheta[1]);
+	}
 	else {
-		TorqueControlEnable(2);
+		if (!tenabled[1]) {
+			TorqueControlEnable(2);
+			tenabled[1] = true;
+		}
 		SetTorque(2, ctrltorque[1]);
 	}
-	if (refdtheta[2] == 0) TorqueControlDisable(3);
+
+	if (refdtheta[2] == 0) {
+		if (tenabled[2]) {
+			TorqueControlDisable(3);
+			tenabled[2] = false;
+		}
+		SetPosition(3, reftheta[2]);
+	}
 	else {
-		TorqueControlEnable(3);
+		if (!tenabled[2]) {
+			TorqueControlEnable(3);
+			tenabled[2] = true;
+		}
 		SetTorque(3, ctrltorque[2]);
 	}
 
@@ -264,17 +297,17 @@ void control(double speed1, double speed2, double speed3) {
 		prevfbdtheta[x] = fbdtheta[x];
 	}
 
-	//Serial.print(fbtheta[0]);
-	//Serial.print(",");
-	//Serial.print(fbtheta[1]);
-	//Serial.print(",");
-	//Serial.print(fbtheta[2]);
-	//Serial.print(",");
-	//Serial.print(0.001 * ctrltorque[0]);
-	//Serial.print(",");
-	//Serial.print(0.001 * ctrltorque[1]);
-	//Serial.print(",");
-	//Serial.println(0.001 * ctrltorque[2]);
+	Serial.print(fbtheta[0]);
+	Serial.print(",");
+	Serial.print(fbtheta[1]);
+	Serial.print(",");
+	Serial.print(fbtheta[2]);
+	Serial.print(",");
+	Serial.print(0.001 * ctrltorque[0]);
+	Serial.print(",");
+	Serial.print(0.001 * ctrltorque[1]);
+	Serial.print(",");
+	Serial.println(0.001 * ctrltorque[2]);
 
 	return;
 }

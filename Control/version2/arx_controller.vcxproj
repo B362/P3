@@ -44,8 +44,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\Guilherme\Documents\Arduino\libraries\ax12;C:\Users\Guilherme\Documents\Arduino\libraries\ax12\utility;C:\Users\Guilherme\Documents\Arduino\libraries\Dynamixel;C:\Users\Guilherme\Documents\Arduino\libraries\Dynamixel\utility;C:\Program Files (x86)\Arduino 1.0.5\libraries;C:\Users\Guilherme\Documents\Arduino\hardware\arbotix\libraries;C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\Extensions\wynhi3dm.e0q\Micro Platforms\default\debuggers;C:\Users\Guilherme\Documents\Arduino\libraries;C:\Users\Guilherme\Documents\Arduino\hardware\arbotix\cores\arbotix;C:\Users\Guilherme\Documents\Arduino\hardware\arbotix\variants\standard;C:\Users\Guilherme\Documents\Arduino\arx_controller;c:\program files (x86)\arduino 1.0.5\hardware\tools\avr\avr\include\;c:\program files (x86)\arduino 1.0.5\hardware\tools\avr\avr\include\avr\;c:\program files (x86)\arduino 1.0.5\hardware\tools\avr\avr\;c:\program files (x86)\arduino 1.0.5\hardware\tools\avr\lib\gcc\avr\4.3.2\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <ForcedIncludeFiles>C:\Users\Guilherme\Documents\Arduino\arx_controller\__vm\.arx_controller.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>C:\Users\Guilherme\Documents\Arduino\libraries\ax12;C:\Users\Guilherme\Documents\Arduino\libraries\ax12\utility;C:\Users\Guilherme\Documents\Arduino\libraries\Dynamixel;C:\Users\Guilherme\Documents\Arduino\libraries\Dynamixel\utility;C:\Program Files (x86)\Arduino 1.0.5\libraries;C:\Users\Guilherme\Documents\Arduino\hardware\arbotix\libraries;C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\Extensions\wynhi3dm.e0q\Micro Platforms\default\debuggers;C:\Users\Guilherme\Documents\Arduino\libraries;C:\Users\Guilherme\Documents\Arduino\hardware\arbotix\cores\arbotix;C:\Users\Guilherme\Documents\Arduino\hardware\arbotix\variants\standard;C:\Users\Guilherme\Documents\Arduino\arx_controller\version2;c:\program files (x86)\arduino 1.0.5\hardware\tools\avr\avr\include\;c:\program files (x86)\arduino 1.0.5\hardware\tools\avr\avr\include\avr\;c:\program files (x86)\arduino 1.0.5\hardware\tools\avr\avr\;c:\program files (x86)\arduino 1.0.5\hardware\tools\avr\lib\gcc\avr\4.3.2\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>C:\Users\Guilherme\Documents\Arduino\arx_controller\version2\__vm\.version2.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <PreprocessorDefinitions>__AVR_ATmega644p__;__AVR_ATmega644P__;ARDUINO=105;ARDUINO_MAIN;__AVR__;__avr__;F_CPU=16000000L;__cplusplus=201103L;GCC_VERSION=40302;ARDUINO_ARCH_AVR;ARDUINO_AVR_ARBOTIX_ARBOTIX_AVR_ARBOTIX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -73,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.arx_controller.vsarduino.h" />
+    <ClInclude Include="__vm\.version2.vsarduino.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
