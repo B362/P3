@@ -29,6 +29,8 @@ float reftheta = 0;
 float fbtheta = 0;
 float refddtheta = 0;
 
+//------------------------------SETUP-ROUTINE------------------------------------------------//
+
 void setup()
 {
   // Initialize the communication with the servos.
@@ -100,20 +102,22 @@ void setup()
         delay(2);
 }
 
+\\------------------------------------------------LOOP------------------------------//
+
 void loop()
 {
-  // Testing joint 1
+  //---------------------------------------Testing joint 1
   d = millis();
   e = millis();
   TorqueControlEnable(1);
-  while(millis() - e < 500) //does the kp control for 7 seconds 
+  while(millis() - e < 500) //does the kp control for x seconds 
   {
     control(1);
   }
   delay(2);
   
   e = millis();
-  while(millis() - e < 500) //does the kp control for 7 seconds 
+  while(millis() - e < 500) //does the kp control for x seconds 
   {
     control2(1);
   }
@@ -122,7 +126,7 @@ void loop()
   TorqueControlDisable(1);
   delay(2000);
 
-  // Testing joint 3
+  //------------------------------------------Testing joint 3
   e = millis();
   TorqueControlEnable(3);
   while(millis() - e < 1000) //does the kp control for 7 seconds 
@@ -140,7 +144,7 @@ void loop()
   TorqueControlDisable(3);
   delay(2000);
 
-  // Testing joint 2
+  //------------------------------------------------------Testing joint 2
   e = millis();
   TorqueControlEnable(2);
   d = millis();
