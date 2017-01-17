@@ -200,7 +200,7 @@ void loop()
 
 //---------------------------------------------Function control positive direction
 
-void control(int jointnr, float wr)
+void control(int jointnr)
 {
   reftheta += TIMESTEP * prevwr;
   fbtheta = 0.001534 * (GetPosition(jointnr) - 2048);
