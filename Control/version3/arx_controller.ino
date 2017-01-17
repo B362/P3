@@ -1,369 +1,20 @@
-// CONTROLLER FOR THE CRUSTCRAWLER ROBOT
-//
-// TODO Run controller in iterations of									...OK!
-// TODO Change the timestep to adapt to the real delay (use millis())
-
-#include <math.h>
+// Import the ax12 library that provides
+// commands to control the Dynamixel servos.
 #include <ax12.h>
+// Additional dynamixel functionality for MX servos.
 #include <dynamixel_mx.h>
 
-// DEFINITIONS
-
-#define TIMESTEP 5	// In seconds
-#define TESTSPEED 10
-#define TORQUECONVERSION1 1000
-#define TORQUECONVERSION2 1000
-#define TORQUECONVERSION3 1000
-
-// Proportional gains
-double pospgain[3] = { 3.015, 3.015, 3.015 };
-double spdpgain[3] = { 30.15, 30.15, 30.15 };
-// Integral gains
-double postigain[3] = { 0, 0, 0 };
-double posglobalsum[3] = { 0, 0, 0 };
-
-double ctrltorque[3] = { 0, 0, 0 };
-// Global register of previous values of theta and dtheta
-// for derivation purposes
-double prevreftheta[3] = { 0, 0, 0 };
-double prevrefdtheta[3] = { 0, 0, 0 };
-double prevfbtheta[3] = { 0, 0, 0 };
-double prevfbdtheta[3] = { 0, 0, 0 };
-// Has torque been enabled?
-bool tenabled[3];
-
-//-----------------------------------------------SETUP-ROUTINE--------------------------------------------//
+#define JOINT 1
+#define TIMESTEP 0.020
 
 int nominal_positions[5];
 int dir[5];
-long int e, d;
+long int e,d; 
 
+float Kv = 30;//32.861;
 float Kp = 3.015;
 float wr = 10.0;
-float w = 0.0;
-float torque = 0;
-float ntorque = 0;
-float zero = 0.0;
-float spid, curr, ppos;
-
-void setup()
-{
-	// Initialize the communication with the servos.
-	// The default baud rate for the robot arms is
-	// 1 Mbps.
-	ax12Init(1000000);
-
-	// Set torque on (stiffen the joints) on all servos.
-	// (ID 254 is the braoadcasting address).
-	TorqueControlDisable(1);
-	TorqueControlDisable(2);
-	TorqueControlDisable(3);
-	TorqueControlDisable(5);
-	TorqueControlDisable(6);
-	for (int i = 0; i < 3; i++) tenabled[i] = false;
-	TorqueOn(254);
-	// Begin the serial communication
-	Serial.begin(115200);
-
-
-	// Delay a short while to get correct readings.
-	delay(200);
-    Serial.println('RS');
-
-	// Raise the arm to nominal
-	// - Set nominal positions
-	nominal_positions[0] = 2048;
-	nominal_positions[1] = 2048;
-	nominal_positions[2] = 2048;
-	nominal_positions[3] = 2048;
-	nominal_positions[4] = 2048;
-
-	// - check how far we are off
-	for (int i = 0; i < 5; ++i){
-		dir[i] = GetPosition(i + 1) - nominal_positions[i];
-	}
-
-	// - Send trajectory
-	bool at_home = false;
-	while (!at_home){
-		for (int i = 0; i < 5; ++i){
-			int set_point = nominal_positions[i] + dir[i];
-			if (dir[i] > 0){
-				dir[i] -= 1;
-			}
-			else if (dir[i] < 0){
-				dir[i] += 1;
-			}
-			SetPosition(i + 1, set_point);
-		}
-
-		// - Check if we are done
-		at_home = true;
-		for (int i = 0; i < 5; ++i){
-			if (dir[i] != 0){
-				at_home = false;
-				break;
-			}
-		}
-
-		// - Delay a while. Increase to move slower.
-		delay(5);
-	}
-        Serial.println('OK!');
-	//SetPidGains(1, 0, 0, 0);
-	//SetPidGains(2, 0, 0, 0);
-	//SetPidGains(3, 0, 0, 0);
-	delay(200);
-
-	TorqueControlEnable(1);
-	TorqueControlEnable(2);
-	TorqueControlEnable(3);
-//	TorqueControlDisable(5);
-//	TorqueControlDisable(6);
-}
-
-//------------------------------------------------VOID-LOOP-----------------------------------------------//
-
-void loop() {
-	
-	// Simulating a hello arm
-
-	// Servo 1
-	while (GetPosition(1) < 3072) {
-		control(TESTSPEED, 0, 0);
-		delay(TIMESTEP);
-	}
-	while (GetPosition(1) > 1024) {
-		control(-TESTSPEED, 0, 0);
-		delay(TIMESTEP);
-	}
-	while (GetPosition(1) < 2048) {
-		control(TESTSPEED, 0, 0);
-		delay(TIMESTEP);
-	}
-
-	// Servo 2
-	while (GetPosition(2) < 3072) {
-		control(0, TESTSPEED, 0);
-		delay(TIMESTEP);
-	}
-	while (GetPosition(2) > 1024) {
-		control(0, -TESTSPEED, 0);
-		delay(TIMESTEP);
-	}
-	while (GetPosition(2) < 2048) {
-		control(0, TESTSPEED, 0);
-		delay(TIMESTEP);
-	}
-
-	// Servo 3
-	while (GetPosition(3) < 3072) {
-		control(0, 0, TESTSPEED);
-		delay(TIMESTEP);
-	}
-	while (GetPosition(3) > 1024) {
-		control(0, 0, -TESTSPEED);
-		delay(TIMESTEP);
-	}
-	while (GetPosition(3) < 2048) {
-		control(0, 0, TESTSPEED);
-		delay(TIMESTEP);
-	}
-	delay(100);
-}
-
-//---------------------------------------NEW-CONTROLLER----------------------------------------------//
-
-void control(double speed1, double speed2, double speed3) {
-
-	float w1 = GetSpeed(1);
-	float w2 = GetSpeed(2);
-	float w3 = GetSpeed(3);
-	float torque1 = (speed1 - w1)*Kp;
-	float torque2 = (speed2 - w2)*Kp;
-	float torque3 = (speed3 - w3)*Kp;
-
-	SetTorque(1, torque1);
-	delay(2);
-	SetTorque(2, torque2);
-	delay(2);
-	SetTorque(3, torque3);
-	delay(2);
-	curr = GetCurrent(1);
-	delay(2);
-	ppos = GetPosition(1);
-        Serial.print(w1);
-        Serial.print(', ');
-        Serial.print(w2);
-        Serial.print(', ');
-        Serial.println(w3);
-//	delay(2)
-
-}
-
-//---DATED-DATED-DATED-DATED-DATED-DATED---------CONTROLLER-----------------------------------------------//
-
-void controldated(double speed1, double speed2, double speed3) {
-
-	// ARBOTIX RECEIVES DATA FROM TRAJECTORY PLANNING AND FEEDBACK FROM SERVOS
-
-	// Receive data from serial and arm
-
-	double reftheta[3];
-	double refdtheta[3];
-	double refddtheta[3];
-
-	refdtheta[0] = speed1;
-	refdtheta[1] = speed2;
-	refdtheta[2] = speed3;
-
-
-	double fbtheta[3];
-	double fbdtheta[3];
-	double fbddtheta[3];
-
-        fbtheta[0] = 0.001534 * (GetPosition(1) - 2048);
-        fbtheta[1] = 0.001534 * (GetPosition(2) - 2048);
-        fbtheta[2] = 0.001534 * (GetPosition(3) - 2048);
-
-	for (int x = 0; x < 3; x++) {
-		reftheta[x] += TIMESTEP * prevrefdtheta[x];
-//		refdtheta[x] = (reftheta[x] - prevreftheta[x]) / TIMESTEP;
-		refddtheta[x] = (refdtheta[x] - prevrefdtheta[x]) / TIMESTEP;
-		fbdtheta[x] = (fbtheta[x] - prevfbtheta[x]) / TIMESTEP;
-		fbddtheta[x] = (fbdtheta[x] - prevfbdtheta[x]) / TIMESTEP;
-	}
-
-	// SET BOUNDARIES FOR THE ARM POSITION
-
-	if (reftheta[0] >= 6.25 || reftheta[0] <= 0) refdtheta[0] = prevreftheta[0];
-	if (reftheta[1] >= 4.7 || reftheta[1] <= 1.55) refdtheta[1] = prevreftheta[1];
-	if (reftheta[2] >= 4.7 || reftheta[2] <= 1.55) refdtheta[2] = prevreftheta[2];
-
-	// THE MAGIC HAPPENS HERE
-
-	double poserr[3];
-	double spderr[3];
-
-		for (int x = 0; x < 3; x++)
-		{
-			poserr[x] = pospgain[x] * (reftheta[x] - fbtheta[x]) + postigain[x] * posglobalsum[x];
-			spderr[x] = spdpgain[x] * (refdtheta[x] - fbdtheta[x]);
-			posglobalsum[x] += TIMESTEP * poserr[x];
-
-			refddtheta[x] += poserr[x] + spderr[x];
-		}
-
-	// CONVERT ACCELERATION TO TORQUE
-
-	getTorque(fbtheta[0], fbtheta[1], fbtheta[2], fbdtheta[0], fbdtheta[1], fbdtheta[2], refddtheta[0], refddtheta[1], refddtheta[2], &ctrltorque[0], &ctrltorque[1], &ctrltorque[2]);
-
-	// We will have the updated values for the control torques,
-	// so we can add a linear value to convert from Nm to Amp�re
-
-	ctrltorque[0] *= TORQUECONVERSION1;
-	ctrltorque[1] *= TORQUECONVERSION2;
-	ctrltorque[2] *= TORQUECONVERSION3;
-
-	// SEND SIGNAL TO ROBOT AND LOOP
-
-	// Send torque
-
-	//SetTorque(1, ctrltorque[0]);
-	//SetTorque(2, ctrltorque[1]);
-	//SetTorque(3, ctrltorque[2]);
-
-	if (refdtheta[0] == 0) {
-		if (tenabled[0]) {
-			TorqueControlDisable(1);
-			tenabled[0] = false;
-		}
-		SetPosition(1, fbtheta[0]);
-	}
-	else {
-		if (!tenabled[0]) {
-			TorqueControlEnable(1);
-			tenabled[0] = true;
-		}
-		SetTorque(1, ctrltorque[0]);
-	}
-
-	if (refdtheta[1] == 0) {
-		if (tenabled[1]) {
-			TorqueControlDisable(2);
-			tenabled[1] = false;
-		}
-		SetPosition(2, fbtheta[1]);
-	}
-	else {
-		if (!tenabled[1]) {
-			TorqueControlEnable(2);
-			tenabled[1] = true;
-		}
-		SetTorque(2, ctrltorque[1]);
-	}
-
-	if (refdtheta[2] == 0) {
-		if (tenabled[2]) {
-			TorqueControlDisable(3);
-			tenabled[2] = false;
-		}
-		SetPosition(3, fbtheta[2]);
-	}
-	else {
-		if (!tenabled[2]) {
-			TorqueControlEnable(3);
-			tenabled[2] = true;
-		}
-		SetTorque(3, ctrltorque[2]);
-	}
-
-	// Update variables
-	for (int x = 0; x < 3; x++) {
-		prevreftheta[x] = reftheta[x];
-		prevrefdtheta[x] = refdtheta[x];
-		prevfbtheta[x] = fbtheta[x];
-		prevfbdtheta[x] = fbdtheta[x];
-	}
-
-	Serial.print(fbtheta[0]);
-	Serial.print(",");
-	Serial.print(fbtheta[1]);
-	Serial.print(",");
-	Serial.print(fbtheta[2]);
-	Serial.print(",");
-	Serial.print(0.001 * ctrltorque[0]);
-	Serial.print(",");
-	Serial.print(0.001 * ctrltorque[1]);
-	Serial.print(",");
-	Serial.println(0.001 * ctrltorque[2]);
-
-	return;
-}
-
-void getTorque(double theta1, double theta2, double theta3, double dtheta1, double dtheta2, double dtheta3, double ddtheta1, double ddtheta2, double ddtheta3, double *torque1, double *torque2, double *torque3)
-{
-	//= == == == == == == == == == == == == == == == == == == = link 1
-	double l1 = 0.235; // length[m]
-	double d1 = 0.160; // mass center
-	double m1 = 0.228; // mass[kg]
-	// moment of inertia
-// Import the ax12 library that provides
-// commands to control the Dynamixel servos.
-#include <ax12.h>
-// Additional dynamixel functionality for MX servos.
-#include <dynamixel_mx.h>
-
-#define JOINT 2
-#define TIMESTEP 0.01
-
-int nominal_positions[5];
-int dir[5];
-long int e,d; 
-
-float Kv = 10;//32.861;
-float wr = 30.0;
-float wr2 = -30.0;
+float wr2 = -10.0;
 float w = 0.0;
 float torquep = 0;
 float torque = 0;
@@ -371,7 +22,15 @@ float ntorque = 0;
 float zero = 0.0;
 float spid , curr, ppos;
 float prevwr = 0;
-float prevw = 0;
+float prevwr2 = 0;
+//float prevw = 0;
+float omegar;
+
+float reftheta = 0;
+float fbtheta = 0;
+float refddtheta = 0;
+
+//------------------------------SETUP-ROUTINE------------------------------------------------//
 
 void setup()
 {
@@ -435,322 +94,28 @@ void setup()
 		// - Delay a while. Increase to move slower.
 		delay(5);
 	}
-        Serial.println('OK!');
+        //Serial.println('OK!');
 	//SetPidGains(1, 0, 0, 0);
 	//SetPidGains(2, 0, 0, 0);
 	//SetPidGains(3, 0, 0, 0);
 	delay(200);
-}
-
-void loop()
-{
-  // Testing joint 1
-  e = millis();
-  TorqueControlEnable(1);
-  while(millis() - e < 500) //does the kp control for 7 seconds 
-  {
-    control(1);
-  }
-  delay(2);
-  
-  e = millis();
-  while(millis() - e < 500) //does the kp control for 7 seconds 
-  {
-    control2(1);
-  }
-  delay(2);
-  TorqueControlDisable(1);
-  delay(2000);
-  
-  // Testing joint 3
-  e = millis();
-  TorqueControlEnable(3);
-  while(millis() - e < 500) //does the kp control for 7 seconds 
-  {
-    control(3);
-  }
-  delay(2);
-  
-  e = millis();
-  while(millis() - e < 500) //does the kp control for 7 seconds 
-  {
-    control2(3);
-  }
-  delay(2);
-  TorqueControlDisable(3);
-  delay(2000);
-  
-  // Testing joint 2
-  e = millis();
-  TorqueControlEnable(2);
-  d = millis();
-  while(millis() - e < 1000) //does the kp control for 7 seconds 
-  {
-    control(2);
-  }
-  delay(2);
-  
-  e = millis();
-  while(millis() - e < 1000) //does the kp control for 7 seconds 
-  {
-    control2(2);
-  }
-  delay(2);
-  
-  TorqueControlDisable(2);
-  delay(2000);
-  /*
-  e = millis();
-  while(millis() -e < 200) //rest 200 ms without doing control 
-  {
-    spid = GetSpeed(JOINT);
-    delay(2);
-    curr = GetCurrent(JOINT);
-    delay(2);
-    ppos =  GetPosition(JOINT);
-    if( millis() - d > 20) 
-    {
-      to_serial(zero, ppos, zero, spid, zero, curr);
-      d = millis();
-    }
-  }
-  */
-  //while(true){}; //wait infinitely 
-//  delay(2000);
-}
-
-void control(int jointnr)
-{
-//  thetar += TIMESTEP * prevthetar;
-//  float ar = (wr - prevwr) / TIMESTEP;
-
-//  theta = GetPosition(JOINT);
-//  a = (w - prevw) / TIMESTEP;
-  
-  w = GetSpeed(jointnr); //reads the speed
-  torquep = (wr - w)*Kp; // calculates de torque based on a proportional gain.
-
-  torque = getTorque(jointnr, torquep);
-  if(abs(torque) > 4600.0) // do not send overload torque 
-  {
-    ntorque = 4600.0;
-    if(torque< 0)
-    {
-      ntorque *= -1;
-    }
-    torque = ntorque;
-  } 
-  Serial.print("the real torque:");
-  Serial.println(torque);
-//  Serial.print(torque);
-  SetTorque(jointnr, torque);
-  delay(2);
-  curr = GetCurrent(jointnr);
-  delay(2);
-  ppos =  GetPosition(jointnr);
-}
-
-void control2(int jointnr)
-{
-//  thetar += TIMESTEP * prevthetar;
-//  float ar = (wr2 - prevwr) / TIMESTEP;
-
-//  theta = GetPosition(JOINT);
-//  a = (w - prevw) / TIMESTEP;
-  
-  w = GetSpeed(jointnr); //reads the speed
-  torquep = (wr2 - w)*Kp; // calculates de torque based on a proportional gain.
-
-  torque = getTorque(jointnr, torquep);
-  if(abs(torque) > 4600.0) // do not send overload torque 
-  {
-    ntorque = 4600.0;
-    if(torque< 0)
-    {
-      ntorque *= -1;
-    }
-    torque = ntorque;
-  }
-  Serial.print("the real torque:");
-  Serial.println(torque);
-//  Serial.print(torque);
-  SetTorque(jointnr, torque);
-  delay(2);
-  curr = GetCurrent(jointnr);
-  delay(2);
-  ppos =  GetPosition(jointnr);
-}
-
-/*
-void control2(int jointnr)
-{
-  w = GetSpeed(jointnr); //reads the speed 
-  torque = (wr2 - w)*Kp; // calculates de torque based on a proportional gain. 
-  if(abs(torque) > 4600.0) // do not send overload torque 
-  {
-    ntorque = 4600.0;
-    if(torque< 0)
-    {
-      ntorque *= -1;
-    }
-  } 
-  SetTorque(jointnr, torque);
-  delay(2);
-  curr = GetCurrent(jointnr);
-  delay(2);
-  ppos =  GetPosition(jointnr);
-}
-*/
-
-float getTorque(int jointnr, float ddtheta) //, double *torque2, double *torque3)
-{
-        float ddtheta1;
-        float ddtheta2;
-        float ddtheta3;
-        if(jointnr == 1)
-        {
-          ddtheta1 = ddtheta;
-          ddtheta2 = 0;
-          ddtheta3 = 0;
-        }
-        if(jointnr == 2)
-        {
-          ddtheta1 = 0;
-          ddtheta2 = ddtheta;
-          ddtheta3 = 0;
-        }        
-        if(jointnr == 3)
-        {
-          ddtheta1 = 0;
-          ddtheta2 = 0;
-          ddtheta3 = ddtheta;
-        }
-
-        double theta1 = 0.001534 * (GetPosition(1) - 2048);
-        double theta2 = 0.001534 * (GetPosition(2) - 2048);
-        double theta3 = 0.001534 * (GetPosition(3) - 2048);
-        double dtheta1 = GetSpeed(1);
-        double dtheta2 = GetSpeed(2);
-        double dtheta3 = GetSpeed(3);
-        
-	//= == == == == == == == == == == == == == == == == == == = link 1
-	double l1 = 0.235; // length[m]
-	double d1 = 0.160; // mass center
-	double m1 = 0.228; // mass[kg]
-	// moment of inertia
-	double I1xx = 0.00006781; double I1xy = 0.00002608; double I1xz = 0;
-	double I1yx = 0.00002608; double I1yy = 0.00631914; double I1yz = 0;
-	double I1zx = 0; double I1zy = 0; double I1zz = 0.00630459;
-	//= == == == == == == == == == == == == == == == == == == = link 2
-	double l2 = 0.270; // length[m]
-	double d2 = 0.135; // mass center
-	double m2 = 0.275; // mass[kg]
-	// moment of inertia
-	double I2xx = 0.00012618; double I2xy = 0.00001090; double I2xz = 0;
-	double I2yx = 0.00001090; double I2yy = 0.00062333; double I2yz = 0;
-	double I2zx = 0; double I2zy = 0; double I2zz = 0.00055076;
-
-	double g = 9.801;
-	theta2 += 1.571;
-// Import the ax12 library that provides
-// commands to control the Dynamixel servos.
-#include <ax12.h>
-// Additional dynamixel functionality for MX servos.
-#include <dynamixel_mx.h>
-
-#define JOINT 2
-#define TIMESTEP 0.01
-
-int nominal_positions[5];
-int dir[5];
-long int e,d; 
-
-float Kp = 10;//32.861;
-float wr = 30.0;
-float wr2 = -30.0;
-float w = 0.0;
-float torquep = 0;
-float torque = 0;
-float ntorque = 0;
-float zero = 0.0;
-float spid , curr, ppos;
-float prevwr = 0;
-float prevw = 0;
-
-void setup()
-{
-  // Initialize the communication with the servos.
-  // The default baud rate for the robot arms is
-  // 1 Mbps.
-  ax12Init(1000000);
-
-  // Set torque on (stiffen the joints) on all servos.
-  // (ID 254 is the braoadcasting address).
-  TorqueControlDisable(1);
-  delay(2);
-  TorqueControlDisable(2);
-  delay(2);
-  TorqueControlDisable(3);
-  delay(2);
-  TorqueOn(254);
-  // Begin the serial communication
-  Serial.begin(115200);
-
-
-  // Delay a short while to get correct readings.
-  delay(100);
-
-	// Raise the arm to nominal
-	// - Set nominal positions
-	nominal_positions[0] = 2048;
-	nominal_positions[1] = 2048;
-	nominal_positions[2] = 2048;
-	nominal_positions[3] = 2048;
-	nominal_positions[4] = 2048;
-
-	// - check how far we are off
-	for (int i = 0; i < 5; ++i){
-		dir[i] = GetPosition(i + 1) - nominal_positions[i];
-	}
-
-	// - Send trajectory
-	bool at_home = false;
-	while (!at_home){
-		for (int i = 0; i < 5; ++i){
-			int set_point = nominal_positions[i] + dir[i];
-			if (dir[i] > 0){
-				dir[i] -= 1;
-			}
-			else if (dir[i] < 0){
-				dir[i] += 1;
-			}
-			SetPosition(i + 1, set_point);
-		}
-
-		// - Check if we are done
-		at_home = true;
-		for (int i = 0; i < 5; ++i){
-			if (dir[i] != 0){
-				at_home = false;
-				break;
-			}
-		}
-
-		// - Delay a while. Increase to move slower.
-		delay(5);
-	}
-        Serial.println('OK!');
-	//SetPidGains(1, 0, 0, 0);
-	//SetPidGains(2, 0, 0, 0);
-	//SetPidGains(3, 0, 0, 0);
-	delay(200);
-          TorqueOn(254);
+        TorqueOn(254);
         delay(2);
+        to_serial(zero, GetPosition(JOINT), zero, GetSpeed(JOINT), zero, GetCurrent(JOINT));
+        delay(20);
+        to_serial(zero, GetPosition(JOINT), zero, GetSpeed(JOINT), zero, GetCurrent(JOINT));
+        delay(20);
+        to_serial(zero, GetPosition(JOINT), zero, GetSpeed(JOINT), zero, GetCurrent(JOINT));
+        delay(20);
 }
+
+//------------------------------------------------LOOP------------------------------//
 
 void loop()
 {
-  // Testing joint 1
+  //---------------------------------------Testing joint 1
+ /* 
+  d = millis();
   e = millis();
   TorqueControlEnable(1);
   while(millis() - e < 500) //does the kp control for 7 seconds 
@@ -768,49 +133,50 @@ void loop()
 
   TorqueControlDisable(1);
   delay(2000);
-  
-  // Testing joint 3
-  e = millis();
+
+  //------------------------------------------Testing joint 3
   TorqueControlEnable(3);
-  while(millis() - e < 500) //does the kp control for 7 seconds 
+  e = millis();
+  while(millis() - e < 1000) //does the kp control for 7 seconds 
   {
     control(3);
   }
   delay(2);
   
   e = millis();
-  while(millis() - e < 500) //does the kp control for 7 seconds 
+  while(millis() - e < 1000) //does the kp control for 7 seconds 
   {
     control2(3);
   }
   delay(2);
   e = millis();
-  while(millis() - e < 500) //does the kp control for 7 seconds 
+  while(millis() - e < 1000) //does the kp control for 7 seconds 
   {
     control(3);
   }
   delay(2);
   TorqueControlDisable(3);
   delay(2000);
+  */
   
-  // Testing joint 2
+  //------------------------------------------------------Testing joint 2
   e = millis();
-  TorqueControlEnable(2);
+  TorqueControlEnable(1);
   d = millis();
   while(millis() - e < 1000) //does the kp control for 7 seconds 
   {
-    control(2);
+    control(1);
   }
   delay(2);
   
   e = millis();
   while(millis() - e < 1000) //does the kp control for 7 seconds 
   {
-    control2(2);
+    control2(1);
   }
   delay(2);
   
-  TorqueControlDisable(2);
+  TorqueControlDisable(1);
   delay(2000);
   /*
   e = millis();
@@ -832,16 +198,15 @@ void loop()
 //  delay(2000);
 }
 
-void control(int jointnr)
-{
-//  thetar += TIMESTEP * prevthetar;
-//  float ar = (wr - prevwr) / TIMESTEP;
+//---------------------------------------------Function control positive direction
 
-//  theta = GetPosition(JOINT);
-//  a = (w - prevw) / TIMESTEP;
-  
+void control(int jointnr, float wr)
+{
+  reftheta += TIMESTEP * prevwr;
+  fbtheta = 0.001534 * (GetPosition(jointnr) - 2048);
+  refddtheta = (wr - prevwr)/ TIMESTEP;
   w = GetSpeed(jointnr); //reads the speed
-  torquep = (wr - w)*Kp; // calculates de torque based on a proportional gain.
+  torquep = refddtheta + (wr - w)*Kv + (reftheta - fbtheta)*Kp; // calculates de torque based on a proportional gain.
 
   torque = getTorque(jointnr, torquep);
   if(abs(torque) > 4600.0) // do not send overload torque 
@@ -853,52 +218,43 @@ void control(int jointnr)
     }
     torque = ntorque;
   } 
-  Serial.print("the real torque:");
-  Serial.println(torque);
-//  Serial.print(torque);
+//  Serial.print("the real torque:");
+//  Serial.println(torque);
   SetTorque(jointnr, torque);
+  //delay(2);
+  //curr = GetCurrent(jointnr);
+  //delay(2);
+  //ppos =  GetPosition(jointnr);
+  prevwr = wr;
+  //long int oneloop = millis() - d;
+  //Serial.print("one loop:");
+  //Serial.println(oneloop);
   delay(2);
   curr = GetCurrent(jointnr);
   delay(2);
   ppos =  GetPosition(jointnr);
-}
-
-void control2(int jointnr)
-{
-//  thetar += TIMESTEP * prevthetar;
-//  float ar = (wr2 - prevwr) / TIMESTEP;
-
-//  theta = GetPosition(JOINT);
-//  a = (w - prevw) / TIMESTEP;
-  
-  w = GetSpeed(jointnr); //reads the speed
-  torquep = (wr2 - w)*Kp; // calculates de torque based on a proportional gain.
-
-  torque = getTorque(jointnr, torquep);
-  if(abs(torque) > 4600.0) // do not send overload torque 
+  omegar = wr;
+  if( millis() - d > 20) //this executes every 20 miliseconds 
   {
-    ntorque = 4600.0;
-    if(torque< 0)
-    {
-      ntorque *= -1;
-    }
-    torque = ntorque;
+    to_serial(zero, ppos, omegar, w, torque, curr); //send data 
+    d = millis();
   }
-  Serial.print("the real torque:");
-  Serial.println(torque);
-//  Serial.print(torque);
-  SetTorque(jointnr, torque);
-  delay(2);
-  curr = GetCurrent(jointnr);
-  delay(2);
-  ppos =  GetPosition(jointnr);
 }
 
-/*
+//---------------------------------------------Function control negative direction
+
 void control2(int jointnr)
 {
-  w = GetSpeed(jointnr); //reads the speed 
-  torque = (wr2 - w)*Kp; // calculates de torque based on a proportional gain. 
+  reftheta += TIMESTEP * prevwr;
+  fbtheta = 0.001534 * (GetPosition(jointnr) - 2048);
+  refddtheta = (wr2 - prevwr2)/ TIMESTEP;
+//  Serial.print("refddtheta:");
+//  Serial.println(refddtheta);
+  w = GetSpeed(jointnr); //reads the speed
+  torquep = refddtheta + (wr2 - w)*Kv + (reftheta - fbtheta)*Kp; // calculates de torque based on a proportional gain.
+//  Serial.print("Control 2: torquep:");
+//  Serial.println(torquep);
+  torque = getTorque(jointnr, torquep);
   if(abs(torque) > 4600.0) // do not send overload torque 
   {
     ntorque = 4600.0;
@@ -906,14 +262,29 @@ void control2(int jointnr)
     {
       ntorque *= -1;
     }
+    torque = ntorque;
   } 
+//  Serial.print("the real torque:");
+//  Serial.println(torque);
   SetTorque(jointnr, torque);
-  delay(2);
+//  delay(2);
+//  curr = GetCurrent(jointnr);
+//  delay(2);
+//  ppos =  GetPosition(jointnr);
+  prevwr2 = wr2;
+    delay(2);
   curr = GetCurrent(jointnr);
   delay(2);
   ppos =  GetPosition(jointnr);
+  omegar = wr2;
+  if( millis() - d > 20) //this executes every 20 miliseconds 
+  {
+    to_serial(zero, ppos, omegar, w, torque, curr); //send data 
+    d = millis();
+  }
 }
-*/
+
+//----------------------------------------------------------Function get torque with compensator (alpha and beta)
 
 float getTorque(int jointnr, float ddtheta) //, double *torque2, double *torque3)
 {
@@ -990,13 +361,13 @@ float getTorque(int jointnr, float ddtheta) //, double *torque2, double *torque3
 	double G2 = g*(d1*m1*cos(theta2) + l1*m2*cos(theta2) + d2*m2*cos(theta2+theta3));
 	double G3 = d2*g*m2*cos(theta2+theta3);
 
-        float torque1 = 100*( H11*ddtheta1 + H12*ddtheta2 + H13*ddtheta3 + C11*dtheta1 + C12*dtheta2 + C13*dtheta3 + G1);// + 0.2 * ctsign(dtheta1);
-        float torque2 = 100*( H21*ddtheta1 + H22*ddtheta2 + H23*ddtheta3 + C21*dtheta1 + C22*dtheta2 + C23*dtheta3 + G2);// + 0.75 * ctsign(dtheta2);
-        float torque3 = 100*( H31*ddtheta1 + H32*ddtheta2 + H33*ddtheta3 + C31*dtheta1 + C32*dtheta2 + C33*dtheta3 + G3);// + 0.4 * ctsign(dtheta3);
-        Serial.print("torques:");
-        Serial.println(torque1);
-        Serial.println(torque2);
-        Serial.println(torque3);
+        float torque1 = 100*( H11*ddtheta1 + H12*ddtheta2 + H13*ddtheta3 + C11*dtheta1 + C12*dtheta2 + C13*dtheta3 + G1) + 0.2 * ctsign(dtheta1);
+        float torque2 = 100*( H21*ddtheta1 + H22*ddtheta2 + H23*ddtheta3 + C21*dtheta1 + C22*dtheta2 + C23*dtheta3 + G2) + 0.75 * ctsign(dtheta2);
+        float torque3 = 100*( H31*ddtheta1 + H32*ddtheta2 + H33*ddtheta3 + C31*dtheta1 + C32*dtheta2 + C33*dtheta3 + G3) + 0.4 * ctsign(dtheta3);
+//        Serial.print("torques:");
+//        Serial.println(torque1);
+//        Serial.println(torque2);
+//        Serial.println(torque3);
 
         if(jointnr == 1)
         {
@@ -1017,7 +388,28 @@ float getTorque(int jointnr, float ddtheta) //, double *torque2, double *torque3
 
 }
 
+//---------------------------------------------------------------Function for Coulombs friction
+
 double ctsign(double value) {
 	if (value <= 0.001 || value >= -0.001) return 0;
 	else return value / (abs(value));
+}
+
+//---------------------------------------------------------------Function for printing serial data to MATLAB
+
+void to_serial(float posr, float pos, float spedr, float sped, float torr, float tor) //sends the data through serial 
+{
+  Serial.print(posr);
+  Serial.print(",");
+  Serial.print(pos);
+  Serial.print(",");
+  Serial.print(spedr);
+  Serial.print(",");
+  Serial.print(sped);
+  Serial.print(",");
+  Serial.print(torr);
+  Serial.print(",");
+  Serial.println(tor);
+
+  //delay(15);
 }
